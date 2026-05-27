@@ -101,10 +101,14 @@ in
     unstable.as-tree
     unstable.chafa
     unstable.colordiff
+    unstable.curl
     unstable.diff-so-fancy
     unstable.difftastic
+    unstable.duckdb
+    unstable.ffmpeg
     unstable.gh
     unstable.ghq
+    unstable.git-filter-repo
     unstable.glow
     unstable.gnumake
     unstable.gojq
@@ -113,11 +117,20 @@ in
     unstable.gotestsum
     unstable.gotools # includes goimports
     unstable.gum
+    unstable.htop
+    unstable.httpie
+    unstable.hyperfine
     unstable.jq
+    unstable.just
+    unstable.less
+    unstable.massren
+    unstable.mergiraf
     unstable.mmdbctl
     unstable.rsync
+    unstable.sad
     unstable.watch
     unstable.yq
+    unstable.yt-dlp
 
     # Docker stuff.
     unstable.docker-client
