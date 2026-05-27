@@ -1,6 +1,10 @@
 result
 result-*
 
+hosts/darwin/dumpedcore/files/glide/glide.d.ts
+hosts/darwin/dumpedcore/files/glide/glide.work.ts
+hosts/darwin/dumpedcore/files/glide/node_modules/
+
 .envrc*
 .direnv/
 .tmp-*/

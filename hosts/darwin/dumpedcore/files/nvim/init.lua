@@ -67,7 +67,6 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
-	lockfile = vim.env.NVIM_LAZY_LOCKFILE,
 	spec = {
 		{ import = "seruman/plugins" },
 		{ import = "seruman/plugins.lsp" },

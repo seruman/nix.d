@@ -14,6 +14,17 @@ in
   home.username = "selman";
   home.homeDirectory = "/Users/selman";
 
+  lib.meta =
+    let
+      configPath = "${config.home.homeDirectory}/etc/nix";
+    in
+    {
+      inherit configPath;
+      mkMutableSymlink = path:
+        config.lib.file.mkOutOfStoreSymlink
+          (configPath + lib.removePrefix (toString inputs.self) (toString path));
+    };
+
   # Keep this fixed after the first Home Manager activation.
   home.stateVersion = "26.05";
 
@@ -34,7 +45,6 @@ in
     PAGER = "less";
     LESS = "-R --mouse";
     BUN_INSTALL = "${config.home.homeDirectory}/.bun";
-    NVIM_LAZY_LOCKFILE = "${config.home.homeDirectory}/etc/nix/hosts/darwin/dumpedcore/files/nvim/lazy-lock.json";
   };
 
   home.sessionPath = [
@@ -48,6 +58,17 @@ in
   home.activation.xdgRuntimeDir = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     run mkdir -p ${lib.escapeShellArg "${config.home.homeDirectory}/.xdg"}
     run chmod 700 ${lib.escapeShellArg "${config.home.homeDirectory}/.xdg"}
+  '';
+
+  home.activation.glideWorkConfigSymlink = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+    glide_work_link=${lib.escapeShellArg "${config.lib.meta.configPath}/hosts/darwin/dumpedcore/files/glide/glide.work.ts"}
+    glide_work_target=${lib.escapeShellArg "${config.xdg.configHome}/work/glide/glide.ts"}
+
+    if [ -e "$glide_work_link" ] && [ ! -L "$glide_work_link" ]; then
+      echo "not replacing non-symlink $glide_work_link" >&2
+    else
+      run ln -sfn "$glide_work_target" "$glide_work_link"
+    fi
   '';
 
   programs.onepassword-secrets = {
@@ -67,7 +88,7 @@ in
     # first, then this config body. Keep the body as Fish, not as
     # Nix-translated logic.
     shellInitLast = ''
-      source ${./files/fish/config.fish}
+      source ${config.lib.meta.mkMutableSymlink ./files/fish/config.fish}
     '';
   };
 
@@ -258,24 +279,16 @@ in
   };
 
   xdg.configFile = {
-    "fish/conf.d".source = ./files/fish/conf.d;
-    "fish/functions".source = ./files/fish/functions;
-    "fish/completions".source = ./files/fish/completions;
-    "fish/pkg".source = ./files/fish/pkg;
+    "fish/conf.d".source = config.lib.meta.mkMutableSymlink ./files/fish/conf.d;
+    "fish/functions".source = config.lib.meta.mkMutableSymlink ./files/fish/functions;
+    "fish/completions".source = config.lib.meta.mkMutableSymlink ./files/fish/completions;
+    "fish/pkg".source = config.lib.meta.mkMutableSymlink ./files/fish/pkg;
 
-    "nvim".source = ./files/nvim;
+    "nvim".source = config.lib.meta.mkMutableSymlink ./files/nvim;
 
     "git/committemplate.txt".text = "";
 
-    "glide/biome.json".source = ./files/glide/biome.json;
-    "glide/commands.glide.ts".source = ./files/glide/commands.glide.ts;
-    "glide/github.glide.ts".source = ./files/glide/github.glide.ts;
-    "glide/glide.ts".source = ./files/glide/glide.ts;
-    "glide/package.json".source = ./files/glide/package.json;
-    "glide/tsconfig.json".source = ./files/glide/tsconfig.json;
-    "glide/ui.glide.ts".source = ./files/glide/ui.glide.ts;
-    "glide/glide.work.ts".source =
-      config.lib.file.mkOutOfStoreSymlink "${config.xdg.configHome}/work/glide/glide.ts";
+    "glide".source = config.lib.meta.mkMutableSymlink ./files/glide;
   };
 
   programs.ghostty = {

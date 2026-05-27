@@ -69,6 +69,11 @@ in
     package = unstable._1password-cli;
   };
 
+  security.pam.services.sudo_local = {
+    touchIdAuth = true;
+    reattach = true;
+  };
+
   environment.systemPackages = [
     # Unfree
     unstable._1password-cli
@@ -169,9 +174,16 @@ in
       "ghostty@tip"
       "orbstack"
       "rectangle"
+      "tailscale-app"
     ];
+    masApps = {
+      "Amphetamine" = 937984704;
+      "Pixelmator Pro" = 1289583905;
+      "GarageBand" = 682658836;
+      "field-kit" = 1612653346;
+    };
     onActivation = {
-      cleanup = "none";
+      cleanup = "zap";
       autoUpdate = false;
       upgrade = false;
       extraEnv = {
