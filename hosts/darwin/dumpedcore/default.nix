@@ -115,6 +115,8 @@ in
     unstable.gum
     unstable.jq
     unstable.mmdbctl
+    unstable.rsync
+    unstable.watch
     unstable.yq
 
     # Docker stuff.
