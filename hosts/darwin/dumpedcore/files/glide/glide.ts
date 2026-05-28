@@ -272,7 +272,7 @@ glide.keymaps.set(
 	"normal",
 	",m",
 	() => {
-		const mpvPath = "/opt/homebrew/bin/mpv";
+		const mpvPath = "/run/current-system/sw/bin/mpv";
 		const mpvArgs = ["--autofit-larger=960x540"];
 
 		glide.hints.show({

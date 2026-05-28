@@ -53,6 +53,7 @@ in
 
     # Language/runtime and toolchains.
     glide
+    unstable.biome
     unstable.bun
     unstable.go
     unstable.lua
@@ -84,6 +85,7 @@ in
     unstable.glow
     unstable.gnumake
     unstable.gojq
+    unstable.gofumpt
     unstable.gopls
     unstable.gotest
     unstable.gotestsum
@@ -98,7 +100,9 @@ in
     unstable.massren
     unstable.mergiraf
     unstable.mmdbctl
+    unstable.mpv
     unstable.rsync
+    unstable.ruff
     unstable.sad
     unstable.watch
     unstable.yq
