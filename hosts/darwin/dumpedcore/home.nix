@@ -9,6 +9,7 @@ in
 {
   imports = [
     inputs.opnix.homeManagerModules.default
+    inputs.pi.homeModules.default
   ];
 
   home.username = "selman";
@@ -30,6 +31,8 @@ in
 
   programs.home-manager.enable = true;
   programs.man.generateCaches = false;
+
+  programs.pi.coding-agent.enable = true;
 
   xdg = {
     enable = true;
@@ -205,15 +208,11 @@ in
     package = null;
 
     includes = [
+      { path = "~/.config/git/user.gitconfig"; }
       { path = "~/.config/work/gitconfig"; }
     ];
 
     settings = {
-      user = {
-        email = "selmankayrancioglu@gmail.com";
-        name = "Selman Kayrancioglu";
-      };
-
       commit.template = "~/.config/git/committemplate.txt";
       pull.rebase = true;
       push.autoSetupRemote = true;
@@ -275,6 +274,18 @@ in
           binary = true;
         };
       };
+    };
+  };
+
+  home.file = {
+    ".pi/agent/settings.json" = {
+      source = config.lib.meta.mkMutableSymlink ./files/pi/agent/settings.json;
+      force = true;
+    };
+
+    ".pi/agent/APPEND_SYSTEM.md" = {
+      source = config.lib.meta.mkMutableSymlink ./files/pi/agent/APPEND_SYSTEM.md;
+      force = true;
     };
   };
 

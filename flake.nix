@@ -21,6 +21,8 @@
     opnix.url = "github:brizzbuzz/opnix";
     opnix.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
+    pi.url = "github:lukasl-dev/pi.nix";
+
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
   };
 

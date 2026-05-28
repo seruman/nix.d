@@ -1,0 +1,11 @@
+{
+  "lastChangelogVersion": "0.75.5",
+  "theme": "light",
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5",
+  "defaultThinkingLevel": "medium",
+  "packages": [
+    "git:github.com/seruman/pi-things"
+  ],
+  "hideThinkingBlock": false
+}
