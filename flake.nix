@@ -33,10 +33,17 @@
       nix-homebrew,
       ...
     }:
+    let
+      system = "aarch64-darwin";
+      unstable = import inputs.nixpkgs-unstable {
+        inherit system;
+        config.allowUnfree = true;
+      };
+    in
     {
       darwinConfigurations.dumpedcore = nix-darwin.lib.darwinSystem {
-        system = "aarch64-darwin";
-        specialArgs = { inherit inputs; };
+        inherit system;
+        specialArgs = { inherit inputs unstable; };
         modules = [
           ./hosts/darwin/dumpedcore
 
@@ -49,7 +56,7 @@
               useUserPackages = true;
               backupFileExtension = "hm-backup";
               overwriteBackup = true;
-              extraSpecialArgs = { inherit inputs; };
+              extraSpecialArgs = { inherit inputs unstable; };
               users.selman = import ./hosts/darwin/dumpedcore/home.nix;
             };
 
