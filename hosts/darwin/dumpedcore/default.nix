@@ -10,7 +10,10 @@ let
     config.allowUnfree = true;
   };
 
-  glide = inputs.glide.packages.${pkgs.stdenv.hostPlatform.system}.default;
+  # Use the unwrapped macOS app to preserve upstream Developer ID signing.
+  # The wrapped default package replaces Contents/MacOS/glide with a shell
+  # wrapper, which invalidates the application bundle signature.
+  glide = inputs.glide.packages.${pkgs.stdenv.hostPlatform.system}.glide-browser-bin-unwrapped;
 
   gitHunks = pkgs.stdenvNoCC.mkDerivation {
     pname = "git-hunks";
