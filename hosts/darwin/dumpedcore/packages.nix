@@ -12,6 +12,40 @@ let
   # wrapper, which invalidates the application bundle signature.
   glide = inputs.glide.packages.${pkgs.stdenv.hostPlatform.system}.glide-browser-bin-unwrapped;
 
+  bttf = pkgs.stdenvNoCC.mkDerivation (finalAttrs: {
+    pname = "bttf";
+    version = "0.1.4";
+
+    src = pkgs.fetchurl {
+      url = "https://github.com/BurntSushi/bttf/releases/download/${finalAttrs.version}/bttf-${finalAttrs.version}-aarch64-apple-darwin.tar.gz";
+      hash = "sha256-QoQyXgnj4r1i7qdugDcB2BdQYZ+VGVblaY0gjDfJvz8=";
+    };
+
+    sourceRoot = "bttf-${finalAttrs.version}-aarch64-apple-darwin";
+
+    installPhase = ''
+      runHook preInstall
+      install -Dm755 bttf "$out/bin/bttf"
+      install -Dm644 README.md "$out/share/doc/bttf/README.md"
+      install -Dm644 doc/COMPARISON.md "$out/share/doc/bttf/COMPARISON.md"
+      install -Dm644 doc/GUIDE.md "$out/share/doc/bttf/GUIDE.md"
+      install -Dm644 LICENSE-MIT "$out/share/licenses/bttf/LICENSE-MIT"
+      install -Dm644 UNLICENSE "$out/share/licenses/bttf/UNLICENSE"
+      runHook postInstall
+    '';
+
+    meta = {
+      description = "Command line tool for datetime arithmetic, parsing, formatting and more";
+      homepage = "https://github.com/BurntSushi/bttf";
+      license = with lib.licenses; [
+        mit
+        unlicense
+      ];
+      mainProgram = "bttf";
+      platforms = [ "aarch64-darwin" ];
+    };
+  });
+
   gitHunks = pkgs.stdenvNoCC.mkDerivation {
     pname = "git-hunks";
     version = "0-unstable-2024-11-13";
@@ -53,6 +87,7 @@ in
 
     # Language/runtime and toolchains.
     glide
+    bttf
     unstable.biome
     unstable.bun
     unstable.go
