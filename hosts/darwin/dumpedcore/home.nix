@@ -287,6 +287,11 @@ in
       source = config.lib.meta.mkMutableSymlink ./files/pi/agent/APPEND_SYSTEM.md;
       force = true;
     };
+
+    "bin/git-histcopy".source = config.lib.meta.mkMutableSymlink ./files/bin/git-histcopy;
+    "bin/mmdbexport-git".source = config.lib.meta.mkMutableSymlink ./files/bin/mmdbexport-git;
+    "bin/pils".source = config.lib.meta.mkMutableSymlink ./files/bin/pils;
+    "bin/tmux-cssh".source = config.lib.meta.mkMutableSymlink ./files/bin/tmux-cssh;
   };
 
   xdg.configFile = {

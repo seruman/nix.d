@@ -1,0 +1,172 @@
+#!/usr/bin/env bun
+// vi: ft=typescript
+import { basename } from "node:path";
+import { SessionManager, type SessionInfo } from "@earendil-works/pi-coding-agent";
+
+type ProjectGroup = {
+    cwd: string;
+    sessions: SessionInfo[];
+    latestModified: Date;
+};
+
+const args = process.argv.slice(2);
+let json = false;
+let dirsOnly = false;
+let help = false;
+const terms: string[] = [];
+
+for (const arg of args) {
+    if (arg === "--json") {
+        json = true;
+    } else if (arg === "-d" || arg === "--dirs" || arg === "--projects") {
+        dirsOnly = true;
+    } else if (arg === "-h" || arg === "--help") {
+        help = true;
+    } else if (arg.startsWith("-")) {
+        console.error(`Unknown option: ${arg}`);
+        console.error("Run 'pils --help' for usage.");
+        process.exit(1);
+    } else {
+        terms.push(arg);
+    }
+}
+
+if (help) {
+    console.log(`pils - list pi sessions grouped by project
+
+Usage:
+  pils [query]
+  pils --dirs [query]
+  pils --json [query]
+  pils --help
+
+Arguments:
+  query   Optional case-insensitive filter matched against project path,
+          session name, first message, and session file path.
+
+Options:
+  -d, --dirs, --projects  Output only project directories
+  --json                  Output data as JSON
+  -h, --help              Show this help
+`);
+    process.exit(0);
+}
+
+const query = terms.join(" ").trim().toLowerCase();
+const sessions = await SessionManager.listAll();
+const filtered = query ? sessions.filter((session) => matchesQuery(session, query)) : sessions;
+const projects = groupByProject(filtered);
+
+if (json) {
+    console.log(JSON.stringify(dirsOnly ? projects.map((project) => project.cwd) : toJson(projects), null, 2));
+    process.exit(0);
+}
+
+if (projects.length === 0) {
+    console.log(query ? `No sessions matched '${query}'.` : "No pi sessions found.");
+    process.exit(0);
+}
+
+if (dirsOnly) {
+    for (const project of projects) console.log(project.cwd);
+    process.exit(0);
+}
+
+for (const project of projects) {
+    const count = project.sessions.length;
+    console.log(`${project.cwd} (${count} session${count === 1 ? "" : "s"})`);
+
+    for (const session of project.sessions) {
+        const label = sessionLabel(session);
+        const msgCount = `${session.messageCount} msg${session.messageCount === 1 ? "" : "s"}`;
+        const forked = session.parentSessionPath ? " [fork]" : "";
+        console.log(`  - ${formatDate(session.modified)}  ${label}${forked}  (${msgCount})`);
+        console.log(`    ${basename(session.path)}`);
+    }
+
+    console.log("");
+}
+
+function groupByProject(sessions: SessionInfo[]): ProjectGroup[] {
+    const byProject = new Map<string, SessionInfo[]>();
+
+    for (const session of sessions) {
+        const cwd = session.cwd || "(unknown cwd)";
+        const list = byProject.get(cwd) ?? [];
+        list.push(session);
+        byProject.set(cwd, list);
+    }
+
+    return [...byProject.entries()]
+        .map(([cwd, projectSessions]) => {
+            projectSessions.sort((a, b) => compareDatesDesc(a.modified, b.modified));
+            return {
+                cwd,
+                sessions: projectSessions,
+                latestModified: projectSessions[0]?.modified ?? new Date(0),
+            };
+        })
+        .sort((a, b) => compareDatesDesc(a.latestModified, b.latestModified) || a.cwd.localeCompare(b.cwd));
+}
+
+function matchesQuery(session: SessionInfo, query: string): boolean {
+    const haystack = [session.cwd, session.name, session.firstMessage, session.path]
+        .filter(Boolean)
+        .map((value) => String(value).toLowerCase())
+        .join("\n");
+    return haystack.includes(query);
+}
+
+function sessionLabel(session: SessionInfo): string {
+    const name = clean(session.name);
+    const firstMessage = clean(session.firstMessage);
+
+    if (name && firstMessage && name !== firstMessage) {
+        return `${truncate(name, 48)} — ${truncate(firstMessage, 72)}`;
+    }
+
+    return truncate(name || firstMessage || basename(session.path), 100);
+}
+
+function clean(value?: string): string {
+    return (value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function truncate(value: string, max: number): string {
+    if (value.length <= max) return value;
+    return `${value.slice(0, Math.max(0, max - 1))}…`;
+}
+
+function compareDatesDesc(a: Date, b: Date): number {
+    return b.getTime() - a.getTime();
+}
+
+function toJson(projects: ProjectGroup[]) {
+    return projects.map((project) => ({
+        cwd: project.cwd,
+        sessionCount: project.sessions.length,
+        latestModified: project.latestModified.toISOString(),
+        sessions: project.sessions.map((session) => ({
+            id: session.id,
+            path: session.path,
+            file: basename(session.path),
+            cwd: session.cwd,
+            name: session.name,
+            firstMessage: clean(session.firstMessage),
+            title: sessionLabel(session),
+            created: session.created.toISOString(),
+            modified: session.modified.toISOString(),
+            messageCount: session.messageCount,
+            parentSessionPath: session.parentSessionPath,
+        })),
+    }));
+}
+
+function formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    const hour = String(date.getHours()).padStart(2, "0");
+    const minute = String(date.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day} ${hour}:${minute}`;
+}

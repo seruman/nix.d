@@ -1,0 +1,43 @@
+#!/usr/bin/env zsh
+
+set -e
+
+# Ripped from; https://stackoverflow.com/a/46484848
+git_histcopy() {
+    if [[ $# -ne 2 ]]; then
+        echo "Usage: git-histcopy <source_file> <destination_file>"
+        return 1
+    fi
+
+    local file_original=$1
+    local file_duplicate=$2
+    local timestamp=$(date +%Y%m%d%H%M%S)
+    local random_string=$(openssl rand -hex 4)
+    local branch_name="histcopy-${timestamp}-${random_string}"
+
+    echo "Source file: $file_original"
+    echo "Destination file: $file_duplicate"
+    echo "Branch name: $branch_name"
+
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        echo "Error: Not in a git repository"
+        return 1
+    fi
+
+    if [[ ! -f $file_original ]]; then
+        echo "Error: Source file $file_original does not exist"
+        return 1
+    fi
+
+    git checkout -b "$branch_name"
+    git mv "$file_original" "$file_duplicate"
+    git commit -m "Duplicate '$file_original' to '$file_duplicate'"
+    git checkout HEAD~ "$file_original"
+    git commit -m "Restore duplicated '$file_original'"
+    git checkout -
+    git merge --no-ff "$branch_name" -m "Merge branch '$branch_name'"
+
+    echo "File copied with history: '$file_original' -> '$file_duplicate'"
+}
+
+git_histcopy "$@"

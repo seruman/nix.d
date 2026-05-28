@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -e
+
+MAX_SIZE=10240 # 10KB
+
+FILE_SIZE=$(stat -f%z "$1" 2>/dev/null || stat -c%s "$1" 2>/dev/null || true)
+
+if [ -n "$FILE_SIZE" ] && [ "$FILE_SIZE" -gt $MAX_SIZE ]; then
+    echo "MMDB file too large for diff (${FILE_SIZE} bytes). Skipping export."
+    echo "This is likely not a test database."
+    exit 0
+fi
+
+mmdbctl export "$1"
