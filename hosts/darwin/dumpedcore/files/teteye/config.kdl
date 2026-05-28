@@ -49,7 +49,7 @@ shell {
 }
 
 titlebar {
-    font-family "Departure Mono"
+    font-family "Berkeley Mono"
 }
 
 keytable "root" {

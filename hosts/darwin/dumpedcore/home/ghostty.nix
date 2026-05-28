@@ -11,7 +11,7 @@
     settings = {
       "window-padding-x" = 10;
       "window-padding-color" = "background";
-      "window-title-font-family" = "Departure Mono";
+      "window-title-font-family" = "Berkeley Mono";
       "window-new-tab-position" = "end";
       "mouse-hide-while-typing" = false;
       "macos-option-as-alt" = "left";
