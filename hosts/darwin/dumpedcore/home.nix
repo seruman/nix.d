@@ -1,4 +1,10 @@
-{ config, inputs, lib, pkgs, ... }:
+{
+  config,
+  inputs,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   unstable = import inputs.nixpkgs-unstable {
@@ -21,9 +27,11 @@ in
     in
     {
       inherit configPath;
-      mkMutableSymlink = path:
-        config.lib.file.mkOutOfStoreSymlink
-          (configPath + lib.removePrefix (toString inputs.self) (toString path));
+      mkMutableSymlink =
+        path:
+        config.lib.file.mkOutOfStoreSymlink (
+          configPath + lib.removePrefix (toString inputs.self) (toString path)
+        );
     };
 
   # Keep this fixed after the first Home Manager activation.
@@ -112,7 +120,10 @@ in
     enable = true;
     package = unstable.zoxide;
     enableFishIntegration = true;
-    options = [ "--cmd" "j" ];
+    options = [
+      "--cmd"
+      "j"
+    ];
   };
 
   programs.direnv = {
@@ -237,10 +248,12 @@ in
         cod = "!git checkout $(git default-branch)";
         goreview = "!f() { git diff \${1:-$(git default-branch)} -- . ':(exclude)vendor/'; }; f";
         semtagg = "!f() { tags=$(git semtag -r -ii -fc); if [ -z \"$tags\" ]; then return; else echo \"$tags\" | fzf --ansi; fi; }; f";
-        "rebase-squashed" = "!f() { case $# in 0) echo 'Usage: git rebase-squashed [target-branch] <original-branch>'; return 1 ;; 1) target=$(git default-branch); original=$1 ;; *) target=$1; original=$2 ;; esac; git rebase --onto \"$target\" $(git merge-base \"$original\" $(git branch --show-current)); }; f";
+        "rebase-squashed" =
+          "!f() { case $# in 0) echo 'Usage: git rebase-squashed [target-branch] <original-branch>'; return 1 ;; 1) target=$(git default-branch); original=$1 ;; *) target=$1; original=$2 ;; esac; git rebase --onto \"$target\" $(git merge-base \"$original\" $(git branch --show-current)); }; f";
         pullt = "pull --tags";
         gone = "!f() { default=$(git default-branch); git branch --format='%(refname:short)' | grep -v \"$default\" | xargs -P8 -I{} sh -c 'git diff --quiet \"$1\"...\"$2\" 2>/dev/null && echo \"$2\"' _ \"$default\" {}; }; f";
-        "prune-gone" = "!f() { git fetch -p && branches=$(git gone | fzf --multi --header='Select branches to delete (TAB to multi-select)'); [ -z \"$branches\" ] && return 0; echo \"$branches\" | xargs git branch -D; }; f";
+        "prune-gone" =
+          "!f() { git fetch -p && branches=$(git gone | fzf --multi --header='Select branches to delete (TAB to multi-select)'); [ -z \"$branches\" ] && return 0; echo \"$branches\" | xargs git branch -D; }; f";
         randomname = "!echo $(LC_ALL=C tr -dc a-z </dev/urandom | head -c4)";
         save = "!f() { git stash push -m \"\${1:-$(git randomname)}\"; }; f";
         new = "!f() { git fetch origin && git checkout -b \"\${1:-$(git randomname)}\" origin/$(git default-branch); }; f";

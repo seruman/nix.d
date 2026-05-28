@@ -1,4 +1,10 @@
-{ config, inputs, lib, pkgs, ... }:
+{
+  config,
+  inputs,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   username = "selman";
@@ -52,23 +58,25 @@ let
     hash = "sha256-O0Fn7TtTaj3Puf4CvN0DYDY+hcwb5vJ2D25HXlzayMY=";
   };
 
-  localHomebrewTap = pkgs.runCommand "homebrew-seruman-local-tap" { nativeBuildInputs = [ pkgs.git ]; } ''
-    mkdir -p "$out/Casks"
-    cp ${./homebrew-casks/1password.rb} "$out/Casks/1password.rb"
-    cp ${./homebrew-casks/epson-connect-printer-setup.rb} "$out/Casks/epson-connect-printer-setup.rb"
-    cp ${./homebrew-casks/epson-l8050-driver.rb} "$out/Casks/epson-l8050-driver.rb"
-    cp ${./homebrew-casks/epson-photo-plus.rb} "$out/Casks/epson-photo-plus.rb"
-    cp ${./homebrew-casks/epson-software-updater.rb} "$out/Casks/epson-software-updater.rb"
-    substitute ${./homebrew-casks/teteye.rb} "$out/Casks/teteye.rb" \
-      --replace-fail "@opnix@" "${opnix}/bin/opnix"
-    cp ${./homebrew-casks/unfolder.rb} "$out/Casks/unfolder.rb"
+  localHomebrewTap =
+    pkgs.runCommand "homebrew-seruman-local-tap" { nativeBuildInputs = [ pkgs.git ]; }
+      ''
+        mkdir -p "$out/Casks"
+        cp ${./homebrew-casks/1password.rb} "$out/Casks/1password.rb"
+        cp ${./homebrew-casks/epson-connect-printer-setup.rb} "$out/Casks/epson-connect-printer-setup.rb"
+        cp ${./homebrew-casks/epson-l8050-driver.rb} "$out/Casks/epson-l8050-driver.rb"
+        cp ${./homebrew-casks/epson-photo-plus.rb} "$out/Casks/epson-photo-plus.rb"
+        cp ${./homebrew-casks/epson-software-updater.rb} "$out/Casks/epson-software-updater.rb"
+        substitute ${./homebrew-casks/teteye.rb} "$out/Casks/teteye.rb" \
+          --replace-fail "@opnix@" "${opnix}/bin/opnix"
+        cp ${./homebrew-casks/unfolder.rb} "$out/Casks/unfolder.rb"
 
-    git -C "$out" init -q
-    git -C "$out" config user.email nix@example.invalid
-    git -C "$out" config user.name nix
-    git -C "$out" add Casks
-    git -C "$out" commit -q -m init
-  '';
+        git -C "$out" init -q
+        git -C "$out" config user.email nix@example.invalid
+        git -C "$out" config user.name nix
+        git -C "$out" add Casks
+        git -C "$out" commit -q -m init
+      '';
 
   xdgEnvironment = {
     XDG_CONFIG_HOME = "${homeDirectory}/.config";
@@ -105,10 +113,6 @@ in
   launchd.user.envVariables = xdgEnvironment;
 
   system.activationScripts.preActivation.text = ''
-    if [ -d /Applications/teteye.app ]; then
-      xattr -dr com.apple.quarantine /Applications/teteye.app 2>/dev/null || true
-    fi
-
     if [ -x /opt/homebrew/bin/brew ]; then
       echo >&2 "Updating local Homebrew tap..."
       sudo \
@@ -163,7 +167,6 @@ in
     unstable.wasmer
     unstable.wasmtime
     unstable.zig
-
 
     # Shell/git/search
     unstable.git
@@ -286,7 +289,7 @@ in
       "field-kit" = 1612653346;
     };
     onActivation = {
-      cleanup = "zap";
+      cleanup = "uninstall";
       autoUpdate = false;
       upgrade = false;
       extraEnv = {
@@ -321,6 +324,10 @@ in
   };
 
   system.activationScripts.postActivation.text = ''
+    if [ -d /Applications/teteye.app ]; then
+      xattr -dr com.apple.quarantine /Applications/teteye.app 2>/dev/null || true
+    fi
+
     mkdir -p ${lib.escapeShellArg screenshotsDirectory}
     chown ${username}:staff ${lib.escapeShellArg screenshotsDirectory}
 
