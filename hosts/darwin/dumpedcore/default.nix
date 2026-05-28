@@ -22,11 +22,12 @@ let
   localHomebrewTap = pkgs.runCommand "homebrew-seruman-local-tap" { nativeBuildInputs = [ pkgs.git ]; } ''
     mkdir -p "$out/Casks"
     cp ${./homebrew-casks/1password.rb} "$out/Casks/1password.rb"
+    cp ${./homebrew-casks/unfolder.rb} "$out/Casks/unfolder.rb"
 
     git -C "$out" init -q
     git -C "$out" config user.email nix@example.invalid
     git -C "$out" config user.name nix
-    git -C "$out" add Casks/1password.rb
+    git -C "$out" add Casks
     git -C "$out" commit -q -m init
   '';
 
@@ -63,6 +64,31 @@ in
   # Seed the user launchd environment so GUI-launched apps/terminals
   # inherit the same XDG base dirs before any shell startup files run.
   launchd.user.envVariables = xdgEnvironment;
+
+  system.activationScripts.preActivation.text = ''
+    if [ -x /opt/homebrew/bin/brew ]; then
+      echo >&2 "Updating local Homebrew tap..."
+      sudo \
+        --preserve-env=PATH \
+        --user=${lib.escapeShellArg username} \
+        --set-home \
+        env PATH="/opt/homebrew/bin:${lib.makeBinPath [ pkgs.git ]}:$PATH" \
+        /bin/bash -c ${lib.escapeShellArg ''
+          set -euo pipefail
+          tap_name=seruman/local
+          tap_url=file://${localHomebrewTap}
+          tap_dir="$(brew --repository "$tap_name" 2>/dev/null || true)"
+
+          if [ -n "$tap_dir" ] && [ -d "$tap_dir/.git" ]; then
+            git -C "$tap_dir" remote set-url origin "$tap_url"
+            git -C "$tap_dir" fetch --force origin master
+            git -C "$tap_dir" reset --hard origin/master
+          else
+            brew tap "$tap_name" "$tap_url"
+          fi
+        ''}
+    fi
+  '';
 
   programs._1password = {
     enable = true;
@@ -180,21 +206,31 @@ in
       {
         name = "seruman/local";
         clone_target = "file://${localHomebrewTap}";
+        force_auto_update = true;
       }
     ];
     casks = [
       # Temporary local tap while Homebrew/homebrew-cask#265717 has the
       # stale arm64 checksum for the current 1Password 8.12.21 download.
       "seruman/local/1password"
+      "seruman/local/unfolder"
+      "affinity"
+      "chatgpt"
       "ghostty@tip"
+      "maccy"
+      "monodraw"
+      "mullvad-browser"
+      "mullvad-vpn"
       "orbstack"
       "rectangle"
+      "steermouse"
       "tailscale-app"
     ];
     masApps = {
       "Amphetamine" = 937984704;
       "Pixelmator Pro" = 1289583905;
       "GarageBand" = 682658836;
+      "Ivory for Mastodon by Tapbots" = 6444602274;
       "field-kit" = 1612653346;
     };
     onActivation = {
