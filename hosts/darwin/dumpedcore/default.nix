@@ -50,6 +50,10 @@ let
   localHomebrewTap = pkgs.runCommand "homebrew-seruman-local-tap" { nativeBuildInputs = [ pkgs.git ]; } ''
     mkdir -p "$out/Casks"
     cp ${./homebrew-casks/1password.rb} "$out/Casks/1password.rb"
+    cp ${./homebrew-casks/epson-connect-printer-setup.rb} "$out/Casks/epson-connect-printer-setup.rb"
+    cp ${./homebrew-casks/epson-l8050-driver.rb} "$out/Casks/epson-l8050-driver.rb"
+    cp ${./homebrew-casks/epson-photo-plus.rb} "$out/Casks/epson-photo-plus.rb"
+    cp ${./homebrew-casks/epson-software-updater.rb} "$out/Casks/epson-software-updater.rb"
     cp ${./homebrew-casks/unfolder.rb} "$out/Casks/unfolder.rb"
 
     git -C "$out" init -q
@@ -242,6 +246,10 @@ in
       # Temporary local tap while Homebrew/homebrew-cask#265717 has the
       # stale arm64 checksum for the current 1Password 8.12.21 download.
       "seruman/local/1password"
+      "seruman/local/epson-connect-printer-setup"
+      "seruman/local/epson-l8050-driver"
+      "seruman/local/epson-photo-plus"
+      "seruman/local/epson-software-updater"
       "seruman/local/unfolder"
       "affinity"
       "chatgpt"
