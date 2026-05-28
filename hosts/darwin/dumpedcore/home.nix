@@ -305,6 +305,7 @@ in
     "git/committemplate.txt".text = "";
 
     "glide".source = config.lib.meta.mkMutableSymlink ./files/glide;
+    "teteye".source = config.lib.meta.mkMutableSymlink ./files/teteye;
   };
 
   programs.ghostty = {

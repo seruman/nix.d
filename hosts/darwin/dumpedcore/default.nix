@@ -15,6 +15,8 @@ let
   # wrapper, which invalidates the application bundle signature.
   glide = inputs.glide.packages.${pkgs.stdenv.hostPlatform.system}.glide-browser-bin-unwrapped;
 
+  opnix = inputs.opnix.packages.${pkgs.stdenv.hostPlatform.system}.default;
+
   gitHunks = pkgs.stdenvNoCC.mkDerivation {
     pname = "git-hunks";
     version = "0-unstable-2024-11-13";
@@ -57,6 +59,8 @@ let
     cp ${./homebrew-casks/epson-l8050-driver.rb} "$out/Casks/epson-l8050-driver.rb"
     cp ${./homebrew-casks/epson-photo-plus.rb} "$out/Casks/epson-photo-plus.rb"
     cp ${./homebrew-casks/epson-software-updater.rb} "$out/Casks/epson-software-updater.rb"
+    substitute ${./homebrew-casks/teteye.rb} "$out/Casks/teteye.rb" \
+      --replace-fail "@opnix@" "${opnix}/bin/opnix"
     cp ${./homebrew-casks/unfolder.rb} "$out/Casks/unfolder.rb"
 
     git -C "$out" init -q
@@ -101,6 +105,10 @@ in
   launchd.user.envVariables = xdgEnvironment;
 
   system.activationScripts.preActivation.text = ''
+    if [ -d /Applications/teteye.app ]; then
+      xattr -dr com.apple.quarantine /Applications/teteye.app 2>/dev/null || true
+    fi
+
     if [ -x /opt/homebrew/bin/brew ]; then
       echo >&2 "Updating local Homebrew tap..."
       sudo \
@@ -253,6 +261,10 @@ in
       "seruman/local/epson-l8050-driver"
       "seruman/local/epson-photo-plus"
       "seruman/local/epson-software-updater"
+      {
+        name = "seruman/local/teteye";
+        greedy = true;
+      }
       "seruman/local/unfolder"
       "affinity"
       "chatgpt"
