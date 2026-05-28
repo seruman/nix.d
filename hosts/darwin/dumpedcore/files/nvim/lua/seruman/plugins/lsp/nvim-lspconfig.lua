@@ -17,6 +17,7 @@ return {
 				"clangd",
 				"protobuf-language-server",
 				"fish-lsp",
+				"nixd",
 				"bashls",
 				"ts_ls",
 				"jsonls",

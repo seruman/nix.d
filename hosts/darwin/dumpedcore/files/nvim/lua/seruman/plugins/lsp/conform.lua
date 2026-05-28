@@ -14,6 +14,7 @@ return {
 				sh = { "shfmt" },
 				bash = { "shfmt" },
 				zsh = { "shfmt" },
+				nix = { "nixfmt" },
 				go = { "gofumpt", "goimports" },
 				python = {
 					"ruff_fix",

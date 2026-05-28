@@ -57,6 +57,7 @@ return {
 				"html",
 				"ini",
 				"make",
+				"nix",
 				"python",
 				"query",
 				"sql",
