@@ -19,9 +19,7 @@ return {
 					"ruff_fix",
 					"ruff_format",
 				},
-				templ = { "templ" },
 				java = { "palantir_java_format" },
-				groovy = { "npm-groovy-lint" },
 			},
 			formatters = {
 				goimports = {

@@ -23,11 +23,9 @@ return {
 				"terraformls",
 				"zls",
 				"tailwindcss",
-				"nim_langserver",
 				"taplo",
 				"html",
 				"biome",
-				"jsonnet_ls",
 				"sourcekit",
 			})
 

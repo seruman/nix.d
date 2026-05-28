@@ -67,7 +67,6 @@ return {
 				"http",
 				"markdown",
 				"markdown_inline",
-				"templ",
 				"java",
 				"groovy",
 			})
@@ -162,9 +161,6 @@ return {
 				swap.swap_previous("@parameter.inner")
 			end, { desc = "TS swap previous parameter" })
 		end,
-	},
-	{
-		"vrischmann/tree-sitter-templ",
 	},
 	{
 		"bezhermoso/tree-sitter-ghostty",

@@ -8,7 +8,6 @@ return {
 				lsp = {
 					auto_attach = true,
 					preference = {
-						"templ",
 						"html",
 						"htmx",
 					},
