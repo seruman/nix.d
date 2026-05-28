@@ -1,8 +1,8 @@
 status is-interactive; or return
 
 # The nixpkgs forgit plugin provides `git-forgit` as a Fish alias/function from
-# vendor_conf.d, not as a PATH binary. Use `type`, not `command`, here.
-type -q git-forgit; or return
+# vendor_conf.d, which is loaded after user conf.d. Register abbreviations
+# unconditionally; the function will exist by the time the prompt is ready.
 
 abbr -a -- ga git-forgit add
 abbr -a -- grh git-forgit reset_head
