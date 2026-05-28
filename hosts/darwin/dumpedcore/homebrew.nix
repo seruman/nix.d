@@ -29,6 +29,7 @@
       "chatgpt"
       "ghostty@tip"
       "maccy"
+      "mimestream"
       "monodraw"
       "mullvad-browser"
       "mullvad-vpn"
