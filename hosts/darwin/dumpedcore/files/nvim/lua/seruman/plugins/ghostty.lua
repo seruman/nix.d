@@ -1,4 +1,5 @@
 return vim.env.GHOSTTY_RESOURCES_DIR
+		and vim.env.TERM_PROGRAM == "ghostty"
 		and {
 			{
 				"ghostty",
