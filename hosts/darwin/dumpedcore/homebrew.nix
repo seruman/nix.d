@@ -34,6 +34,7 @@
       "mullvad-browser"
       "mullvad-vpn"
       "orbstack"
+      "prusaslicer"
       "rectangle"
       "steermouse"
       "tailscale-app"
