@@ -186,6 +186,17 @@
   };
 
   home.file = {
+    ".npmrc".text = ''
+      # Only install package versions published at least 7 days ago.
+      min-release-age=7
+    '';
+
+    ".bunfig.toml".text = ''
+      [install]
+      # Only install package versions published at least 7 days ago.
+      minimumReleaseAge = 604800
+    '';
+
     ".pi/agent/settings.json" = {
       source = config.lib.meta.mkMutableSymlink ./files/pi/agent/settings.json;
       force = true;
@@ -203,6 +214,11 @@
   };
 
   xdg.configFile = {
+    "uv/uv.toml".text = ''
+      # Only install package versions published at least 7 days ago.
+      exclude-newer = "7 days"
+    '';
+
     "nvim".source = config.lib.meta.mkMutableSymlink ./files/nvim;
 
     "glide".source = config.lib.meta.mkMutableSymlink ./files/glide;
