@@ -7,34 +7,28 @@ let
   secretsDir = "/var/lib/nixos/secrets";
 in
 {
+  imports = [ ./hardware-configuration.nix ];
+
   nix = {
-    settings.experimental-features = [
-      "nix-command"
-      "flakes"
-    ];
+    package = pkgs.nixVersions.latest;
+    settings = {
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
+      min-free = 536870912;
+      max-free = 2147483648;
+    };
+    gc = {
+      automatic = true;
+      dates = "03:15";
+      options = "--delete-older-than 7d";
+      randomizedDelaySec = "45min";
+    };
     optimise = {
       automatic = true;
-      dates = [ "00:00" ];
+      dates = [ "04:15" ];
     };
-  };
-
-  boot = {
-    kernelPackages = pkgs.linuxKernel.packages.linux_rpi4;
-    initrd.availableKernelModules = [
-      "xhci_pci"
-      "usbhid"
-      "usb_storage"
-    ];
-    loader = {
-      grub.enable = false;
-      generic-extlinux-compatible.enable = true;
-    };
-  };
-
-  fileSystems."/" = {
-    device = "/dev/disk/by-label/NIXOS_SD";
-    fsType = "ext4";
-    options = [ "noatime" ];
   };
 
   networking = {
@@ -111,6 +105,5 @@ in
     }
   ];
 
-  hardware.enableRedistributableFirmware = true;
   system.stateVersion = "23.11";
 }
