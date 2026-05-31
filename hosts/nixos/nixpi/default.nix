@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ inputs, pkgs, ... }:
 
 let
   user = "seruman";
@@ -10,7 +10,7 @@ in
   imports = [ ./hardware-configuration.nix ];
 
   nix = {
-    package = pkgs.nixVersions.latest;
+    package = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system}.nixVersions.latest;
     settings = {
       experimental-features = [
         "nix-command"
