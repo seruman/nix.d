@@ -5,6 +5,9 @@
     # Stable base for nix-darwin/Home Manager/system plumbing.
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
 
+    # Stable base for NixOS hosts.
+    nixpkgs-nixos.url = "github:NixOS/nixpkgs/nixos-25.05";
+
     # Selective bleeding-edge packages, used explicitly by host configs.
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
@@ -34,15 +37,16 @@
       ...
     }:
     let
-      system = "aarch64-darwin";
+      darwinSystem = "aarch64-darwin";
+      linuxSystem = "aarch64-linux";
       unstable = import inputs.nixpkgs-unstable {
-        inherit system;
+        system = darwinSystem;
         config.allowUnfree = true;
       };
     in
     {
       darwinConfigurations.dumpedcore = nix-darwin.lib.darwinSystem {
-        inherit system;
+        system = darwinSystem;
         specialArgs = { inherit inputs unstable; };
         modules = [
           ./hosts/darwin/dumpedcore
@@ -72,6 +76,12 @@
             };
           }
         ];
+      };
+
+      nixosConfigurations.nixpi = inputs.nixpkgs-nixos.lib.nixosSystem {
+        system = linuxSystem;
+        specialArgs = { inherit inputs; };
+        modules = [ ./hosts/nixos/nixpi ];
       };
     };
 }
