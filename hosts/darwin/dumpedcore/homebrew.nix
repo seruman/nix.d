@@ -11,9 +11,14 @@
         clone_target = "file://${localHomebrewTap}";
         force_auto_update = true;
       }
+      {
+        name = "lightpanda-io/browser";
+        force_auto_update = true;
+      }
     ];
     brews = [
       "agent-browser"
+      "lightpanda-io/browser/lightpanda"
     ];
     casks = [
       # Temporary local tap while Homebrew/homebrew-cask#265717 has the

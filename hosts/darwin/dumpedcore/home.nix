@@ -54,6 +54,7 @@
     PAGER = "less";
     LESS = "-R --mouse";
     BUN_INSTALL = "${config.home.homeDirectory}/.bun";
+    LIGHTPANDA_DISABLE_TELEMETRY = "true";
   };
 
   home.sessionPath = [
