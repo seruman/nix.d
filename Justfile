@@ -5,6 +5,7 @@ system := ".#darwinConfigurations.dumpedcore.system"
 rebuild := "/run/current-system/sw/bin/darwin-rebuild"
 nixpi := "seruman@nixpi.local"
 nixpi-target := "/etc/nixos"
+keepy-bin := "/var/lib/keepy/bin/keep"
 
 _default:
     just --list
@@ -43,3 +44,16 @@ current:
 nixpi-switch:
     rsync -az --delete --rsync-path='sudo rsync' --exclude .git --exclude result --exclude TODO.md ./ {{nixpi}}:{{nixpi-target}}/
     ssh {{nixpi}} 'sudo nixos-rebuild switch --flake {{nixpi-target}}#nixpi'
+
+# Stream keepy service logs from nixpi.
+nixpi-keepy-logs:
+    ssh {{nixpi}} 'sudo journalctl -u keepy.service -f'
+
+# Show keepy service status on nixpi.
+nixpi-keepy-status:
+    ssh {{nixpi}} 'sudo systemctl status keepy.service --no-pager'
+
+# Copy a built keepy binary to nixpi and restart the service.
+nixpi-install-keepy localbin:
+    scp {{localbin}} {{nixpi}}:/tmp/keep
+    ssh {{nixpi}} 'sudo install -o keepy -g keepy -m 0755 /tmp/keep {{keepy-bin}} && rm -f /tmp/keep && sudo systemctl restart keepy.service'
