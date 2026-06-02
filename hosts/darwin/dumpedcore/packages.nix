@@ -149,6 +149,7 @@ in
     unstable.ffmpeg
     unstable.gh
     unstable.ghq
+    unstable.agent-browser
     cloudflareCf
     gitHunks
     unstable.git-filter-repo

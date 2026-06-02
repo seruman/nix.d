@@ -17,7 +17,6 @@
       }
     ];
     brews = [
-      "agent-browser"
       "lightpanda-io/browser/lightpanda"
     ];
     casks = [
