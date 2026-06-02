@@ -11,6 +11,7 @@ let
   keepyBinDir = "${keepyDataDir}/bin";
   keepyRuntimeDir = "/run/keepy";
   keepySecretsDir = "${keepyDataDir}/secrets";
+  unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system};
   opnix = inputs.opnix.packages.${pkgs.system}.default;
   keepyGitHubTokenSecretRef = "op://Homelab/keepy-github-token/password";
   keepyXCookiesSecretRef = "op://Homelab/keepy-x-cookies/password";
@@ -86,6 +87,7 @@ in
     tailscale
     tmux
     opnix
+    unstable.cloudflared
   ];
 
   services = {
