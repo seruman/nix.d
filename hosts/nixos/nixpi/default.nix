@@ -15,6 +15,7 @@ let
   opnix = inputs.opnix.packages.${pkgs.system}.default;
   keepyGitHubTokenSecretRef = "op://Homelab/keepy-github-token/password";
   keepyXCookiesSecretRef = "op://Homelab/keepy-x-cookies/password";
+  keepyCloudflaredTunnelTokenSecretRef = "op://Homelab/keepy-cloudflared-tunnel-token/password";
   keepyOpnixConfig = pkgs.writeText "keepy-opnix.json" ''
     {
       "secrets": [
@@ -30,6 +31,13 @@ let
           "reference": "${keepyXCookiesSecretRef}",
           "owner": "${keepyUser}",
           "group": "${keepyGroup}",
+          "mode": "0400"
+        },
+        {
+          "path": "${keepySecretsDir}/cloudflared-tunnel-token",
+          "reference": "${keepyCloudflaredTunnelTokenSecretRef}",
+          "owner": "root",
+          "group": "root",
           "mode": "0400"
         }
       ]
@@ -213,6 +221,37 @@ in
       KEEP_LISTEN_ADDR = "127.0.0.1:8080";
       KEEP_DATABASE_PATH = "${keepyDataDir}/keep.db";
       KEEP_LOG_LEVEL = "info";
+    };
+  };
+
+  systemd.services.cloudflared-keepy = {
+    description = "Cloudflare Tunnel connector for keepy";
+    wantedBy = [ "multi-user.target" ];
+    after = [
+      "network-online.target"
+      "keepy-secrets.service"
+    ];
+    wants = [
+      "network-online.target"
+      "keepy-secrets.service"
+    ];
+
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${unstable.cloudflared}/bin/cloudflared tunnel --no-autoupdate run --token-file %d/tunnel-token";
+      Restart = "on-failure";
+      RestartSec = "5s";
+      LoadCredential = [
+        "tunnel-token:${keepySecretsDir}/cloudflared-tunnel-token"
+      ];
+      StateDirectory = "cloudflared";
+      RuntimeDirectory = "cloudflared";
+      RuntimeDirectoryMode = "0750";
+      DynamicUser = true;
+      NoNewPrivileges = true;
+      PrivateTmp = true;
+      ProtectSystem = "strict";
+      ProtectHome = true;
     };
   };
 
