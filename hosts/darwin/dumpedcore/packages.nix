@@ -73,6 +73,40 @@ let
       mainProgram = "git-hunks";
     };
   };
+
+  cloudflareCf =
+    let
+      nodejs = unstable.nodejs;
+    in
+    pkgs.stdenvNoCC.mkDerivation (finalAttrs: {
+      pname = "cloudflare-cf";
+      version = "0.0.6";
+
+      src = pkgs.fetchurl {
+        url = "https://registry.npmjs.org/cf/-/cf-${finalAttrs.version}.tgz";
+        hash = "sha512-FUTEhDk1lfisq32cXeP+L2nl2eCrVaFQZ21vs+HGk78BnrbaUjtAvw5PbPH6qtWbkqbgjcpWI8sSzwSePU0cTQ==";
+      };
+
+      sourceRoot = "package";
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+
+      installPhase = ''
+        runHook preInstall
+        mkdir -p "$out/lib/cloudflare-cf" "$out/bin"
+        cp -R bin dist package.json README.md "$out/lib/cloudflare-cf/"
+        chmod +x "$out/lib/cloudflare-cf/bin/cf"
+        makeWrapper ${nodejs}/bin/node "$out/bin/cf" \
+          --add-flags "$out/lib/cloudflare-cf/bin/cf"
+        runHook postInstall
+      '';
+
+      meta = {
+        description = "Technical preview unified command-line interface for Cloudflare";
+        homepage = "https://blog.cloudflare.com/cf-cli-local-explorer/";
+        license = lib.licenses.mit;
+        mainProgram = "cf";
+      };
+    });
 in
 {
   programs._1password = {
@@ -115,6 +149,7 @@ in
     unstable.ffmpeg
     unstable.gh
     unstable.ghq
+    cloudflareCf
     gitHunks
     unstable.git-filter-repo
     unstable.glow
