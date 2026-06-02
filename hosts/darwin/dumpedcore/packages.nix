@@ -150,6 +150,7 @@ in
     unstable.gh
     unstable.ghq
     unstable.agent-browser
+    unstable.cloudflared
     cloudflareCf
     gitHunks
     unstable.git-filter-repo
