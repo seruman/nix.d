@@ -3,9 +3,12 @@
   "theme": "light",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.5",
-  "defaultThinkingLevel": "medium",
-  "packages": [
-    "git:github.com/seruman/pi-things"
-  ],
-  "hideThinkingBlock": false
+  "defaultThinkingLevel": "high",
+  "packages": ["git:github.com/seruman/pi-things"],
+  "hideThinkingBlock": false,
+  "compaction": {
+    "enabled": true,
+    "reserveTokens": 75000,
+    "keepRecentTokens": 10000
+  }
 }
