@@ -86,8 +86,13 @@ in
     };
   };
 
+  boot.extraModprobeConfig = ''
+    options brcmfmac roamoff=1
+  '';
+
   environment.systemPackages = with pkgs; [
     htop
+    iw
     neovim
     nixfmt-rfc-style
     oscclip
@@ -154,6 +159,20 @@ in
     "d ${keepyBinDir} 0755 ${keepyUser} ${keepyGroup} -"
     "d ${keepySecretsDir} 0750 ${keepyUser} ${keepyGroup} -"
   ];
+
+  systemd.services.wifi-power-save-off = {
+    description = "Disable wlan0 Wi-Fi power save";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "wpa_supplicant-wlan0.service" "dhcpcd.service" ];
+    wants = [ "wpa_supplicant-wlan0.service" "dhcpcd.service" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      User = "root";
+      Group = "root";
+      ExecStart = "${pkgs.iw}/bin/iw dev ${interface} set power_save off";
+    };
+  };
 
   systemd.services.keepy-secrets = {
     description = "keepy runtime secrets via OpNix";
