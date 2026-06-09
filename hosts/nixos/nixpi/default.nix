@@ -163,8 +163,14 @@ in
   systemd.services.wifi-power-save-off = {
     description = "Disable wlan0 Wi-Fi power save";
     wantedBy = [ "multi-user.target" ];
-    after = [ "wpa_supplicant-wlan0.service" "dhcpcd.service" ];
-    wants = [ "wpa_supplicant-wlan0.service" "dhcpcd.service" ];
+    after = [
+      "wpa_supplicant-wlan0.service"
+      "dhcpcd.service"
+    ];
+    wants = [
+      "wpa_supplicant-wlan0.service"
+      "dhcpcd.service"
+    ];
 
     serviceConfig = {
       Type = "oneshot";
