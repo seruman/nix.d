@@ -45,7 +45,7 @@ in
     inputs.home-manager.darwinModules.home-manager
     inputs.nix-homebrew.darwinModules.nix-homebrew
     ./homebrew.nix
-    ./packages.nix
+    (import ./packages.nix { inherit inputs; })
   ];
 
   options.seruman.darwin = {
