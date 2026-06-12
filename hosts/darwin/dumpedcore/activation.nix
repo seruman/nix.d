@@ -1,9 +1,8 @@
 {
   lib,
-  localHomebrewTap,
+  dumpedcoreHomebrewTap,
   pkgs,
   homeDirectory,
-  screenshotsDirectory,
   username,
   ...
 }:
@@ -19,7 +18,7 @@ in
 {
   system.activationScripts.preActivation.text = ''
     if [ -x /opt/homebrew/bin/brew ]; then
-      echo >&2 "Updating local Homebrew tap..."
+      echo >&2 "Updating dumpedcore Homebrew tap..."
       sudo \
         --preserve-env=PATH \
         --user=${lib.escapeShellArg username} \
@@ -27,8 +26,8 @@ in
         env PATH="/opt/homebrew/bin:${lib.makeBinPath [ pkgs.git ]}:$PATH" \
         /bin/bash -c ${lib.escapeShellArg ''
           set -euo pipefail
-          tap_name=seruman/local
-          tap_url=file://${localHomebrewTap}
+          tap_name=seruman/dumpedcore
+          tap_url=file://${dumpedcoreHomebrewTap}
           tap_dir="$(brew --repository "$tap_name" 2>/dev/null || true)"
 
           if [ -n "$tap_dir" ] && [ -d "$tap_dir/.git" ]; then
@@ -43,13 +42,6 @@ in
   '';
 
   system.activationScripts.postActivation.text = ''
-    if [ -d /Applications/teteye.app ]; then
-      xattr -dr com.apple.quarantine /Applications/teteye.app 2>/dev/null || true
-    fi
-
-    mkdir -p ${lib.escapeShellArg screenshotsDirectory}
-    chown ${username}:staff ${lib.escapeShellArg screenshotsDirectory}
-
     keyboard_layouts_dir=${lib.escapeShellArg "${homeDirectory}/Library/Keyboard Layouts"}
     mkdir -p "$keyboard_layouts_dir"
     install -m 0644 ${turkishKeyboardLayout}/TurkishQLegacyFixed.keylayout "$keyboard_layouts_dir/TurkishQLegacyFixed.keylayout"

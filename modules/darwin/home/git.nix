@@ -11,13 +11,6 @@
         path = ~/.config/git/config
   '';
 
-  home.file.".ssh/config.d/1password-agent".text = ''
-    Include ~/.ssh/1Password/config
-
-    Host *
-      IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-  '';
-
   programs.git = {
     enable = true;
     # Git itself is installed from nixpkgs-unstable at the system level.
@@ -79,10 +72,6 @@
       pager.dsf = "diff-so-fancy | less --tabs=4 -RF";
 
       diff = {
-        mmdb = {
-          textconv = "~/bin/mmdbexport-git";
-          binary = true;
-        };
         hex = {
           textconv = "hexdump -v -C";
           binary = true;

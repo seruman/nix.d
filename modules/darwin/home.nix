@@ -3,10 +3,25 @@
   inputs,
   lib,
   pkgs,
+  serumanDarwin,
   unstable,
   ...
 }:
 
+let
+  file = relativePath: "${serumanDarwin.filesRoot}/${relativePath}";
+
+  mutableTarget =
+    path:
+    serumanDarwin.configPath + lib.removePrefix (toString serumanDarwin.sourceRoot) (toString path);
+
+  configSource =
+    path:
+    if serumanDarwin.mutableFiles.enable then
+      config.lib.file.mkOutOfStoreSymlink (mutableTarget path)
+    else
+      path;
+in
 {
   imports = [
     inputs.opnix.homeManagerModules.default
@@ -14,23 +29,16 @@
     ./home/fish.nix
     ./home/git.nix
     ./home/ghostty.nix
+    ./home/ssh.nix
   ];
 
-  home.username = "selman";
-  home.homeDirectory = "/Users/selman";
+  home.username = serumanDarwin.username;
+  home.homeDirectory = serumanDarwin.homeDirectory;
 
-  lib.meta =
-    let
-      configPath = "${config.home.homeDirectory}/etc/nix";
-    in
-    {
-      inherit configPath;
-      mkMutableSymlink =
-        path:
-        config.lib.file.mkOutOfStoreSymlink (
-          configPath + lib.removePrefix (toString inputs.self) (toString path)
-        );
-    };
+  lib.meta = {
+    inherit (serumanDarwin) configPath filesRoot sourceRoot;
+    mkConfigSource = configSource;
+  };
 
   # Keep this fixed after the first Home Manager activation.
   home.stateVersion = "26.05";
@@ -70,16 +78,18 @@
     run chmod 700 ${lib.escapeShellArg "${config.home.homeDirectory}/.xdg"}
   '';
 
-  home.activation.glideWorkConfigSymlink = lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-    glide_work_link=${lib.escapeShellArg "${config.lib.meta.configPath}/hosts/darwin/dumpedcore/files/glide/glide.work.ts"}
-    glide_work_target=${lib.escapeShellArg "${config.xdg.configHome}/work/glide/glide.ts"}
+  home.activation.glideWorkConfigSymlink = lib.mkIf serumanDarwin.mutableFiles.enable (
+    lib.hm.dag.entryAfter [ "linkGeneration" ] ''
+      glide_work_link=${lib.escapeShellArg (mutableTarget (file "glide/glide.work.ts"))}
+      glide_work_target=${lib.escapeShellArg "${config.xdg.configHome}/work/glide/glide.ts"}
 
-    if [ -e "$glide_work_link" ] && [ ! -L "$glide_work_link" ]; then
-      echo "not replacing non-symlink $glide_work_link" >&2
-    else
-      run ln -sfn "$glide_work_target" "$glide_work_link"
-    fi
-  '';
+      if [ -e "$glide_work_link" ] && [ ! -L "$glide_work_link" ]; then
+        echo "not replacing non-symlink $glide_work_link" >&2
+      else
+        run ln -sfn "$glide_work_target" "$glide_work_link"
+      fi
+    ''
+  );
 
   programs.onepassword-secrets = {
     enable = true;
@@ -125,7 +135,7 @@
     package = unstable.bat;
     config.theme = "seruzen";
     themes.seruzen = {
-      src = ./files/bat/themes;
+      src = file "bat/themes";
       file = "seruzen.tmTheme";
     };
   };
@@ -171,7 +181,7 @@
     keyMode = "vi";
     mouse = true;
     terminal = "tmux-256color";
-    extraConfig = builtins.readFile ./files/tmux/tmux.conf;
+    extraConfig = builtins.readFile (file "tmux/tmux.conf");
     plugins = [
       {
         plugin = unstable.tmuxPlugins.prefix-highlight;
@@ -199,19 +209,18 @@
     '';
 
     ".pi/agent/settings.json" = {
-      source = config.lib.meta.mkMutableSymlink ./files/pi/agent/settings.json;
+      source = config.lib.meta.mkConfigSource (file "pi/agent/settings.json");
       force = true;
     };
 
     ".pi/agent/APPEND_SYSTEM.md" = {
-      source = config.lib.meta.mkMutableSymlink ./files/pi/agent/APPEND_SYSTEM.md;
+      source = config.lib.meta.mkConfigSource (file "pi/agent/APPEND_SYSTEM.md");
       force = true;
     };
 
-    "bin/git-histcopy".source = config.lib.meta.mkMutableSymlink ./files/bin/git-histcopy;
-    "bin/mmdbexport-git".source = config.lib.meta.mkMutableSymlink ./files/bin/mmdbexport-git;
-    "bin/pils".source = config.lib.meta.mkMutableSymlink ./files/bin/pils;
-    "bin/tmux-cssh".source = config.lib.meta.mkMutableSymlink ./files/bin/tmux-cssh;
+    "bin/git-histcopy".source = config.lib.meta.mkConfigSource (file "bin/git-histcopy");
+    "bin/pils".source = config.lib.meta.mkConfigSource (file "bin/pils");
+    "bin/tmux-cssh".source = config.lib.meta.mkConfigSource (file "bin/tmux-cssh");
   };
 
   xdg.configFile = {
@@ -220,10 +229,10 @@
       exclude-newer = "7 days"
     '';
 
-    "nvim".source = config.lib.meta.mkMutableSymlink ./files/nvim;
+    "nvim".source = config.lib.meta.mkConfigSource (file "nvim");
 
-    "glide".source = config.lib.meta.mkMutableSymlink ./files/glide;
-    "teteye".source = config.lib.meta.mkMutableSymlink ./files/teteye;
+    "glide".source = config.lib.meta.mkConfigSource (file "glide");
+    "teteye".source = config.lib.meta.mkConfigSource (file "teteye");
   };
 
 }

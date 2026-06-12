@@ -30,51 +30,21 @@
   };
 
   outputs =
-    inputs@{
-      nix-darwin,
-      home-manager,
-      nix-homebrew,
-      ...
-    }:
+    inputs@{ nix-darwin, ... }:
     let
       darwinSystem = "aarch64-darwin";
       linuxSystem = "aarch64-linux";
-      unstable = import inputs.nixpkgs-unstable {
-        system = darwinSystem;
-        config.allowUnfree = true;
-      };
+      commonDarwinModule = import ./modules/darwin/common.nix { inherit inputs; };
     in
     {
+      darwinModules.common = commonDarwinModule;
+
       darwinConfigurations.dumpedcore = nix-darwin.lib.darwinSystem {
         system = darwinSystem;
-        specialArgs = { inherit inputs unstable; };
+        specialArgs = { inherit inputs; };
         modules = [
+          commonDarwinModule
           ./hosts/darwin/dumpedcore
-
-          home-manager.darwinModules.home-manager
-          nix-homebrew.darwinModules.nix-homebrew
-
-          {
-            home-manager = {
-              useGlobalPkgs = true;
-              useUserPackages = true;
-              backupFileExtension = "hm-backup";
-              overwriteBackup = true;
-              extraSpecialArgs = { inherit inputs unstable; };
-              users.selman = import ./hosts/darwin/dumpedcore/home.nix;
-            };
-
-            nix-homebrew = {
-              enable = true;
-              enableRosetta = false;
-              user = "selman";
-              # Let nix-darwin's `homebrew` module own shell integration so it
-              # uses the configured prefix and also wires Fish completions.
-              enableBashIntegration = false;
-              enableFishIntegration = false;
-              enableZshIntegration = false;
-            };
-          }
         ];
       };
 
