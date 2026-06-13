@@ -38,6 +38,7 @@ in
   lib.meta = {
     inherit (serumanDarwin) configPath filesRoot sourceRoot;
     mkConfigSource = configSource;
+    mkMutableTarget = mutableTarget;
   };
 
   # Keep this fixed after the first Home Manager activation.

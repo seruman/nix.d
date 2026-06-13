@@ -1,5 +1,6 @@
 {
   config,
+  lib,
   pkgs,
   serumanDarwin,
   ...
@@ -7,6 +8,7 @@
 
 let
   file = relativePath: "${serumanDarwin.filesRoot}/${relativePath}";
+  fishConfig = file "fish/config.fish";
 in
 {
   programs.fish = {
@@ -15,9 +17,13 @@ in
     # Preserve the old config.fish position: Fish sources conf.d snippets
     # first, then this config body. Keep the body as Fish, not as
     # Nix-translated logic.
-    shellInitLast = ''
-      source ${config.lib.meta.mkConfigSource (file "fish/config.fish")}
-    '';
+    shellInitLast =
+      if serumanDarwin.mutableFiles.enable then
+        ''
+          source ${lib.escapeShellArg (config.lib.meta.mkMutableTarget fishConfig)}
+        ''
+      else
+        builtins.readFile fishConfig;
   };
 
   xdg.configFile = {
