@@ -11,10 +11,7 @@
         clone_target = "file://${commonHomebrewTap}";
         force_auto_update = true;
       }
-      {
-        name = "lightpanda-io/browser";
-        force_auto_update = true;
-      }
+      "lightpanda-io/browser"
     ];
     brews = [
       "lightpanda-io/browser/lightpanda"
