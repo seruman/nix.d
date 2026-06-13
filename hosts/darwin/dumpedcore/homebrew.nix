@@ -8,13 +8,6 @@
         clone_target = "file://${dumpedcoreHomebrewTap}";
         force_auto_update = true;
       }
-      {
-        name = "lightpanda-io/browser";
-        force_auto_update = true;
-      }
-    ];
-    brews = [
-      "lightpanda-io/browser/lightpanda"
     ];
     casks = [
       "seruman/dumpedcore/epson-connect-printer-setup"
@@ -23,14 +16,10 @@
       "seruman/dumpedcore/epson-software-updater"
       "seruman/dumpedcore/unfolder"
       "affinity"
-      "chatgpt"
-      "ghostty@tip"
-      "maccy"
       "mimestream"
       "mullvad-browser"
       "mullvad-vpn"
       "prusaslicer"
-      "rectangle"
     ];
     masApps = {
       "Pixelmator Pro" = 1289583905;

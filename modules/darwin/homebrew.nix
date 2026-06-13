@@ -11,6 +11,13 @@
         clone_target = "file://${commonHomebrewTap}";
         force_auto_update = true;
       }
+      {
+        name = "lightpanda-io/browser";
+        force_auto_update = true;
+      }
+    ];
+    brews = [
+      "lightpanda-io/browser/lightpanda"
     ];
     casks = [
       # Temporary local tap while Homebrew/homebrew-cask#265717 has the
@@ -20,8 +27,12 @@
         name = "seruman/common/teteye";
         greedy = true;
       }
+      "chatgpt"
+      "ghostty@tip"
+      "maccy"
       "monodraw"
       "orbstack"
+      "rectangle"
       "steermouse"
       "tailscale-app"
     ];
