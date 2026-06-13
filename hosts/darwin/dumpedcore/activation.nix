@@ -2,19 +2,10 @@
   lib,
   dumpedcoreHomebrewTap,
   pkgs,
-  homeDirectory,
   username,
   ...
 }:
 
-let
-  turkishKeyboardLayout = pkgs.fetchFromGitHub {
-    owner = "seruman";
-    repo = "macos-turkish-keyboard-layout";
-    rev = "1d87f298c8e665c8d48fcc184bf364f96d3a1b68";
-    hash = "sha256-O0Fn7TtTaj3Puf4CvN0DYDY+hcwb5vJ2D25HXlzayMY=";
-  };
-in
 {
   system.activationScripts.preActivation.text = ''
     if [ -x /opt/homebrew/bin/brew ]; then
@@ -45,10 +36,4 @@ in
     fi
   '';
 
-  system.activationScripts.postActivation.text = ''
-    keyboard_layouts_dir=${lib.escapeShellArg "${homeDirectory}/Library/Keyboard Layouts"}
-    mkdir -p "$keyboard_layouts_dir"
-    install -m 0644 ${turkishKeyboardLayout}/TurkishQLegacyFixed.keylayout "$keyboard_layouts_dir/TurkishQLegacyFixed.keylayout"
-    chown ${username}:staff "$keyboard_layouts_dir/TurkishQLegacyFixed.keylayout"
-  '';
 }

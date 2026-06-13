@@ -32,6 +32,13 @@ let
         git -C "$out" commit -q -m init
       '';
 
+  turkishKeyboardLayout = pkgs.fetchFromGitHub {
+    owner = "seruman";
+    repo = "macos-turkish-keyboard-layout";
+    rev = "1d87f298c8e665c8d48fcc184bf364f96d3a1b68";
+    hash = "sha256-O0Fn7TtTaj3Puf4CvN0DYDY+hcwb5vJ2D25HXlzayMY=";
+  };
+
   xdgEnvironment = {
     XDG_CONFIG_HOME = "${cfg.homeDirectory}/.config";
     XDG_CACHE_HOME = "${cfg.homeDirectory}/.cache";
@@ -153,6 +160,11 @@ in
 
       mkdir -p ${lib.escapeShellArg cfg.screenshotsDirectory}
       chown ${cfg.username}:staff ${lib.escapeShellArg cfg.screenshotsDirectory}
+
+      keyboard_layouts_dir=${lib.escapeShellArg "${cfg.homeDirectory}/Library/Keyboard Layouts"}
+      mkdir -p "$keyboard_layouts_dir"
+      install -m 0644 ${turkishKeyboardLayout}/TurkishQLegacyFixed.keylayout "$keyboard_layouts_dir/TurkishQLegacyFixed.keylayout"
+      chown ${cfg.username}:staff "$keyboard_layouts_dir/TurkishQLegacyFixed.keylayout"
     '';
 
     environment.variables = xdgEnvironment // {
@@ -194,6 +206,14 @@ in
         _FXShowPosixPathInTitle = true;
         NewWindowTarget = "Home";
         FXPreferredViewStyle = "clmv";
+      };
+
+      controlcenter.BatteryShowPercentage = true;
+
+      dock = {
+        orientation = "right";
+        show-recents = false;
+        tilesize = 44;
       };
 
       screencapture.location = cfg.screenshotsDirectory;
