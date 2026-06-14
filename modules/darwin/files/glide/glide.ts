@@ -3,17 +3,13 @@ glide.prefs.set("devtools.debugger.prompt-connection", false);
 glide.prefs.set("media.videocontrols.picture-in-picture.audio-toggle.enabled", true);
 glide.prefs.set("browser.tabs.insertAfterCurrent", true);
 glide.prefs.set("browser.tabs.insertRelatedAfterCurrent", true);
-glide.prefs.set("browser.toolbars.bookmarks.visibility", "never");
-glide.prefs.set("sidebar.revamp", true);
-glide.prefs.set("sidebar.verticalTabs", true);
-glide.prefs.set("sidebar.visibility", "always-show");
-glide.prefs.set("sidebar.position_start", true);
 glide.prefs.set("browser.uidensity", 1);
 glide.prefs.set("browser.startup.page", 3);
 glide.prefs.set("browser.warnOnQuitShortcut", false);
 glide.prefs.clear("ui.textScaleFactor");
 glide.prefs.clear("layout.css.devPixelsPerPx");
 glide.prefs.clear("browser.zoom.full");
+glide.prefs.set("xpinstall.signatures.required", false);
 
 glide.include("ui.glide.ts");
 
@@ -24,6 +20,7 @@ const plugins = [
 	"https://addons.mozilla.org/firefox/downloads/file/4579487/readwise_highlighter-0.15.25.xpi",
 	"https://addons.mozilla.org/firefox/downloads/file/4385912/icloud_hide_my_email-1.2.9.xpi",
 	"https://addons.mozilla.org/firefox/downloads/file/4409277/prometheus_formatter-3.2.0.xpi",
+	"https://addons.mozilla.org/firefox/downloads/file/4720796/kagi_translate-0.1.8.xpi",
 ];
 
 for (const plugin of plugins) {
@@ -55,25 +52,7 @@ glide.keymaps.set(
 glide.keymaps.set("normal", "<C-f>", "hint --location=browser-ui");
 glide.keymaps.set("normal", ";", "commandline_show", { description: "Open command line" });
 
-async function ensure_toolbar_visible(): Promise<void> {
-	if (glide.styles.has("hide-toolbox")) {
-		glide.styles.remove("hide-toolbox");
-		await new Promise((resolve) => setTimeout(resolve, 40));
-	}
-}
-
-function with_toolbar_visible(
-	action: (props: glide.KeymapCallbackProps) => void | Promise<void>,
-): glide.KeymapCallback {
-	return async (props) => {
-		await ensure_toolbar_visible();
-		await action(props);
-	};
-}
-
 async function focus_native_urlbar(opts?: { open_in_new_tab?: boolean; respect_pinned?: boolean }) {
-	await ensure_toolbar_visible();
-
 	const open_in_new_tab = opts?.open_in_new_tab ?? false;
 	const respect_pinned = opts?.respect_pinned ?? false;
 
@@ -89,6 +68,12 @@ async function focus_native_urlbar(opts?: { open_in_new_tab?: boolean; respect_p
 		await new Promise((resolve) => setTimeout(resolve, 30));
 		await glide.keys.send("<D-l>", { skip_mappings: true });
 	}
+}
+
+async function move_current_tab_by(tab_id: number, delta: number): Promise<void> {
+	const tab = await browser.tabs.get(tab_id);
+	const target_index = Math.max(0, tab.index + delta);
+	await browser.tabs.move(tab_id, { index: target_index });
 }
 
 glide.keymaps.set(
@@ -134,6 +119,12 @@ glide.keymaps.set(
 
 glide.keymaps.set("normal", "J", "tab_next", { description: "Next tab" });
 glide.keymaps.set("normal", "K", "tab_prev", { description: "Previous tab" });
+glide.keymaps.set("normal", "<C-j>", ({ tab_id }) => move_current_tab_by(tab_id, 1), {
+	description: "Move current tab down",
+});
+glide.keymaps.set("normal", "<C-k>", ({ tab_id }) => move_current_tab_by(tab_id, -1), {
+	description: "Move current tab up",
+});
 glide.keymaps.set("normal", "r", "reload", { description: "Reload the page" });
 glide.keymaps.set("normal", "R", "reload_hard", { description: "Reload the page, bypass cache" });
 
@@ -210,18 +201,18 @@ glide.keymaps.set(
 glide.keymaps.set(
 	"normal",
 	"wi",
-	with_toolbar_visible(async () => {
+	async () => {
 		await glide.keys.send("<D-A-i>", { skip_mappings: true });
-	}),
+	},
 	{ description: "Open devtools inspector" },
 );
 
 glide.keymaps.set(
 	"normal",
 	"<leader>go",
-	with_toolbar_visible(async () => {
+	async () => {
 		await glide.keys.send("<D-S-k>", { skip_mappings: true });
-	}),
+	},
 	{ description: "Focus on Okta extension" },
 );
 
@@ -272,7 +263,7 @@ glide.keymaps.set(
 	"normal",
 	",m",
 	() => {
-		const mpvPath = "/run/current-system/sw/bin/mpv";
+		const mpvPath = "/opt/homebrew/bin/mpv";
 		const mpvArgs = ["--autofit-larger=960x540"];
 
 		glide.hints.show({
@@ -335,45 +326,9 @@ glide.keymaps.set(
 	"normal",
 	"<leader>tt",
 	() => {
-		const v = glide.o.native_tabs;
-		if (["autohide", "show"].includes(v)) {
-			glide.o.native_tabs = "hide";
-			return;
-		}
-		glide.o.native_tabs = "show";
+		glide.o.native_tabs = glide.o.native_tabs === "hide" ? "show" : "hide";
 	},
 	{ description: "Toggle tab bar" },
-);
-
-glide.keymaps.set(
-	"normal",
-	"<leader>tr",
-	() => {
-		const id = "hide-toolbox";
-		if (!glide.styles.has(id)) {
-			glide.styles.add(
-				`
-					#navigator-toolbox {
-						visibility: collapse !important;
-						opacity: 0 !important;
-						height: 0 !important;
-						max-height: 0 !important;
-						min-height: 0 !important;
-						margin: 0 !important;
-						padding: 0 !important;
-						border: 0 !important;
-						overflow: clip !important;
-						pointer-events: none !important;
-					}
-				`,
-				{ id },
-			);
-			return;
-		}
-
-		glide.styles.remove(id);
-	},
-	{ description: "Toggle top toolbar" },
 );
 
 glide.keymaps.set("normal", "<leader>h", async () => {
