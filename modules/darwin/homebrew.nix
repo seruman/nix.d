@@ -27,6 +27,7 @@
       "chatgpt"
       "ghostty@tip"
       "maccy"
+      "mimestream"
       "monodraw"
       "orbstack"
       "rectangle"

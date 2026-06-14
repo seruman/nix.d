@@ -16,7 +16,6 @@
       "seruman/dumpedcore/epson-software-updater"
       "seruman/dumpedcore/unfolder"
       "affinity"
-      "mimestream"
       "mullvad-browser"
       "mullvad-vpn"
       "prusaslicer"
