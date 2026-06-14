@@ -17,6 +17,7 @@ vim.o.smartcase = true
 vim.o.splitkeep = "screen"
 vim.o.timeout = true
 vim.o.timeoutlen = 300
+vim.o.swapfile = false
 
 vim.o.background = "light"
 vim.cmd("colorscheme seruzen")

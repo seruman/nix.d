@@ -3,6 +3,7 @@ return {
 		"stevearc/conform.nvim",
 		opts = {
 			formatters_by_ft = {
+				cs = { "csharpier" },
 				lua = { "stylua" },
 				typescript = { "biome", "prettierd", "prettier", stop_after_first = true },
 				typescriptreact = { "biome", "prettierd", "prettier", stop_after_first = true },

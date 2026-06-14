@@ -188,12 +188,14 @@ in
     # language runtimes/toolchains.
     unstable.bash-language-server
     unstable.clang-tools
+    unstable.csharpier
     unstable.fish-lsp
     unstable.fishPlugins.forgit
     unstable.lua-language-server
     unstable.nixd
     unstable.nixfmt
     unstable.protobuf-language-server
+    unstable.roslyn-ls
     unstable.shellcheck
     unstable.shfmt
     unstable.sourcekit-lsp

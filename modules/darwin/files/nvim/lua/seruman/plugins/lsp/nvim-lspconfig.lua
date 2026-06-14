@@ -11,6 +11,7 @@ return {
 				"lua_ls",
 				"ty",
 				"ruff",
+				"roslyn_ls",
 				"rust_analyzer",
 				"yamlls",
 				"typos_lsp",
