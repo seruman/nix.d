@@ -219,11 +219,6 @@ in
       screencapture.location = cfg.screenshotsDirectory;
     };
 
-    system.keyboard = {
-      enableKeyMapping = true;
-      remapCapsLockToControl = true;
-    };
-
     home-manager = {
       useGlobalPkgs = true;
       useUserPackages = true;

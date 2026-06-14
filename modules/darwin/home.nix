@@ -92,6 +92,11 @@ in
     ''
   );
 
+  services.macos-remap-keys = {
+    enable = true;
+    keyboard.Capslock = "Control";
+  };
+
   programs.onepassword-secrets = {
     enable = true;
     tokenFile = "${config.xdg.configHome}/opnix/token";
