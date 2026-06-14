@@ -233,7 +233,13 @@ in
 
     "nvim".source = config.lib.meta.mkConfigSource (file "nvim");
 
-    "glide".source = config.lib.meta.mkConfigSource (file "glide");
+    "glide/biome.json".source = config.lib.meta.mkConfigSource (file "glide/biome.json");
+    "glide/commands.glide.ts".source = config.lib.meta.mkConfigSource (file "glide/commands.glide.ts");
+    "glide/github.glide.ts".source = config.lib.meta.mkConfigSource (file "glide/github.glide.ts");
+    "glide/glide.ts".source = config.lib.meta.mkConfigSource (file "glide/glide.ts");
+    "glide/package.json".source = config.lib.meta.mkConfigSource (file "glide/package.json");
+    "glide/tsconfig.json".source = config.lib.meta.mkConfigSource (file "glide/tsconfig.json");
+    "glide/ui.glide.ts".source = config.lib.meta.mkConfigSource (file "glide/ui.glide.ts");
     "teteye".source = config.lib.meta.mkConfigSource (file "teteye");
   };
 
