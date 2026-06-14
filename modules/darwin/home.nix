@@ -129,6 +129,7 @@ in
     enable = true;
     package = unstable.direnv;
     enableFishIntegration = true;
+    stdlib = lib.mkBefore (builtins.readFile (file "direnv/direnvrc"));
   };
 
   programs.bat = {
