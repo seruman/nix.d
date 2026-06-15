@@ -15,6 +15,7 @@
     ];
     brews = [
       "lightpanda-io/browser/lightpanda"
+      "xcodes"
     ];
     casks = [
       # Temporary local tap while Homebrew/homebrew-cask#265717 has the
