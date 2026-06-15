@@ -42,7 +42,7 @@ in
       screenshotsDirectory
       username
       ;
-    mutableFiles.enable = true;
+    mutableFiles.enable = false;
   };
 
   networking = {
