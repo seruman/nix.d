@@ -197,6 +197,12 @@ in
         AppleShowAllExtensions = true;
         InitialKeyRepeat = 15;
         KeyRepeat = 1;
+        "com.apple.sound.beep.volume" = 0.0;
+        "com.apple.sound.beep.feedback" = 0;
+      };
+
+      CustomUserPreferences = {
+        NSGlobalDomain.SLSMenuBarUseBlurredAppearance = 1;
       };
 
       finder = {
