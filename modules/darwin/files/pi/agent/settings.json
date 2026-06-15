@@ -4,7 +4,7 @@
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.5",
   "defaultThinkingLevel": "high",
-  "packages": ["git:github.com/seruman/pi-things"],
+  "packages": ["git:github.com/seruman/pi-things", "npm:@plannotator/pi-extension"],
   "hideThinkingBlock": false,
   "compaction": {
     "enabled": true,
