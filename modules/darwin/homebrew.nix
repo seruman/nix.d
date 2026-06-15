@@ -15,7 +15,6 @@
     ];
     brews = [
       "lightpanda-io/browser/lightpanda"
-      "xcodes"
     ];
     casks = [
       # Temporary local tap while Homebrew/homebrew-cask#265717 has the
@@ -37,6 +36,7 @@
     ];
     masApps = {
       "Amphetamine" = 937984704;
+      "Xcode" = 497799835;
     };
     onActivation = {
       cleanup = "uninstall";
