@@ -47,6 +47,12 @@ in
   programs.home-manager.enable = true;
   programs.man.generateCaches = false;
 
+  # Skip the home-configuration-reference-manpage. It runs nixosOptionsDoc and
+  # bakes nixpkgs source store paths into options.json without context, which
+  # is what produces the "references the store path ... without a proper
+  # context" warning on every build. Not used.
+  manual.manpages.enable = false;
+
   programs.pi.coding-agent.enable = true;
 
   xdg = {
