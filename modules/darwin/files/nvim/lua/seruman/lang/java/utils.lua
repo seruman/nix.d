@@ -1,55 +1,41 @@
 local M = {}
 
-local home = vim.env.HOME
-
-function M.get_sdkman_java_versions()
-	local sdkman_java_dir = home .. "/.sdkman/candidates/java"
-	local java_version_pattern = "(%d+)%.(%d+)%.(%d+)[%-_]?([^/]*)"
-
-	if vim.fn.isdirectory(sdkman_java_dir) ~= 1 then
-		return {}
+local function probe_java_major(java_home)
+	if not java_home or vim.fn.isdirectory(java_home) ~= 1 then
+		return nil
 	end
-
-	local found_versions = {}
-
-	for name, type in vim.fs.dir(sdkman_java_dir) do
-		if type == "directory" and name ~= "current" then
-			local path = sdkman_java_dir .. "/" .. name
-			local major = name:match(java_version_pattern)
-			if major then
-				major = tonumber(major)
-				table.insert(found_versions, {
-					path = path,
-					version = name,
-					major = major,
-					is_default = vim.fn.isdirectory(sdkman_java_dir .. "/current") == 1
-						and vim.fn.resolve(sdkman_java_dir .. "/current") == path,
-				})
-			end
-		end
+	local java_bin = java_home .. "/bin/java"
+	if vim.fn.executable(java_bin) ~= 1 then
+		return nil
 	end
+	-- `java -version` writes to stderr.
+	local result = vim.system({ java_bin, "-version" }, { text = true }):wait()
+	if result.code ~= 0 then
+		return nil
+	end
+	local output = result.stderr or result.stdout or ""
+	local major = output:match('version%s+"(%d+)')
+	return major and tonumber(major) or nil
+end
 
-	table.sort(found_versions, function(a, b)
-		return a.major > b.major
-	end)
-
-	return found_versions
+local function java_runtime_name(major)
+	if major == 8 then
+		return "JavaSE-1.8"
+	end
+	if major and major >= 9 then
+		return string.format("JavaSE-%d", major)
+	end
+	return nil
 end
 
 function M.find_java_home()
-	local versions = M.get_sdkman_java_versions()
-
-	if #versions > 0 then
-		return versions[1].path
-	end
-
 	if vim.env.JAVA_HOME and vim.fn.isdirectory(vim.env.JAVA_HOME) == 1 then
 		return vim.env.JAVA_HOME
 	end
 
 	local java_path = vim.fn.exepath("java")
 	if java_path ~= "" then
-		-- Extract JAVA_HOME from the java path (remove /bin/java)
+		-- ${java_home}/bin/java -> ${java_home}
 		return vim.fn.fnamemodify(java_path, ":h:h")
 	end
 
@@ -81,6 +67,7 @@ function M.detect_project_java_version(root_dir)
 				local version_patterns = {
 					"sourceCompatibility%s*=%s*['\"]([%d%.]+)['\"]", -- Gradle
 					"<java%.version>([%d%.]+)</java%.version>", -- Maven
+					"languageVersion%s*=%s*JavaLanguageVersion%.of%((%d+)%)", -- Gradle toolchain
 					"java=([%d%.]+)", -- .sdkmanrc
 					"java%s+([%d%.]+)", -- .tool-versions
 					"^([%d%.]+)$", -- .java-version
@@ -99,7 +86,7 @@ function M.detect_project_java_version(root_dir)
 		end
 	end
 
-	return 17
+	return nil
 end
 
 local function sha256_file(filepath)
@@ -137,7 +124,7 @@ function M.setup_gradle_checksums(root_dir, trusted_checksums, save_checksums_fu
 					table.insert(trusted_checksums, checksum)
 					save_checksums_func()
 
-				local clients = vim.lsp.get_clients({ name = "jdtls" })
+					local clients = vim.lsp.get_clients({ name = "jdtls" })
 					if clients and #clients > 0 then
 						clients[1]:stop()
 					end
@@ -162,63 +149,57 @@ function M.ensure_lombok(workspace_dir)
 	if vim.fn.filereadable(lombok_path) ~= 1 then
 		vim.notify("Lombok jar not found. Downloading...", vim.log.levels.INFO)
 		vim.fn.system({
-			"curl", "-L",
+			"curl",
+			"-L",
 			"https://projectlombok.org/downloads/lombok.jar",
-			"-o", lombok_path,
+			"-o",
+			lombok_path,
 		})
 	end
 	return lombok_path
 end
 
+-- Build the JDTLS `runtimes` list from environment variables.
+--
+-- Sources:
+--   * JAVA_HOME — the active default JDK. Major version probed via `java -version`.
+--   * JAVA_HOME_<major> (e.g. JAVA_HOME_11, JAVA_HOME_17) — additional JDKs.
+--     The major version is read directly from the env var name.
+--
+-- The default flag goes to the runtime whose major matches `project_java_version`
+-- if provided; otherwise to JAVA_HOME's runtime.
 function M.get_java_runtimes(java_home, project_java_version)
 	local runtimes = {}
-	local versions = M.get_sdkman_java_versions()
+	local seen = {}
 
-	local function java_runtime_name(major)
-		if major == 8 then return "JavaSE-1.8" end
-		if major >= 9 then return string.format("JavaSE-%d", major) end
-		return nil
-	end
-
-	for _, version in ipairs(versions) do
-		local name = java_runtime_name(version.major)
-		if name then
-			table.insert(runtimes, {
-				name = name,
-				path = version.path,
-				default = (version.major == project_java_version)
-					or (project_java_version == nil and version.is_default)
-					or (#runtimes == 0 and not project_java_version),
-			})
+	local function add(major, path, is_active)
+		local name = java_runtime_name(major)
+		if not name or not path or vim.fn.isdirectory(path) ~= 1 then
+			return
 		end
+		if seen[name] then
+			return
+		end
+		seen[name] = true
+		table.insert(runtimes, {
+			name = name,
+			path = path,
+			default = (project_java_version ~= nil and major == project_java_version)
+				or (project_java_version == nil and is_active),
+		})
 	end
 
-	if vim.env.JAVA_HOME and vim.fn.isdirectory(vim.env.JAVA_HOME) == 1 then
-		local result = vim.system({ vim.env.JAVA_HOME .. "/bin/java", "-version" }, { text = true }):wait()
-		if result.code == 0 then
-			-- java -version outputs to stderr
-			local output = result.stderr or result.stdout or ""
-			local major = output:match('version%s+"(%d+)')
-			if major then
-				major = tonumber(major)
-				local name = java_runtime_name(major)
+	-- JAVA_HOME: the active default.
+	local active_home = vim.env.JAVA_HOME
+	if active_home and vim.fn.isdirectory(active_home) == 1 then
+		add(probe_java_major(active_home), active_home, true)
+	end
 
-				local has_version = false
-				for _, runtime in ipairs(runtimes) do
-					if runtime.name == name then
-						has_version = true
-						break
-					end
-				end
-
-				if not has_version and name then
-					table.insert(runtimes, {
-						name = name,
-						path = vim.env.JAVA_HOME,
-						default = major == project_java_version and #runtimes == 0,
-					})
-				end
-			end
+	-- JAVA_HOME_<major>: additional declared runtimes.
+	for name, value in pairs(vim.fn.environ()) do
+		local suffix = name:match("^JAVA_HOME_(%d+)$")
+		if suffix and value ~= "" then
+			add(tonumber(suffix), value, false)
 		end
 	end
 
@@ -229,6 +210,19 @@ function M.get_java_runtimes(java_home, project_java_version)
 			path = java_home,
 			default = true,
 		})
+	end
+
+	-- If nothing got marked default (e.g. project version provided but none matched),
+	-- fall back to the JAVA_HOME entry, then the first.
+	local has_default = false
+	for _, rt in ipairs(runtimes) do
+		if rt.default then
+			has_default = true
+			break
+		end
+	end
+	if not has_default then
+		runtimes[1].default = true
 	end
 
 	return runtimes
