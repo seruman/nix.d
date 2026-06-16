@@ -131,7 +131,14 @@ return {
 					end, opts({ desc = "LSP typedefs" }))
 
 					vim.keymap.set("n", "<space>lr", function()
-						vim.cmd.LspRestart()
+						local bufnr = vim.api.nvim_get_current_buf()
+						local clients = vim.lsp.get_clients({ bufnr = bufnr })
+						for _, client in ipairs(clients) do
+							vim.lsp.stop_client(client.id, true)
+						end
+						vim.defer_fn(function()
+							vim.cmd("edit")
+						end, 200)
 					end, opts({ desc = "LSP restart" }))
 					vim.keymap.set("n", "<space>*", function()
 						vim.lsp.buf.document_highlight()
