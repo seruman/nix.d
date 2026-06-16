@@ -20,20 +20,26 @@ if not java_home then
 	return
 end
 local java_bin = java_home .. "/bin/java"
-local lombok_path = utils.ensure_lombok(workspace_dir)
+local lombok_path = utils.find_lombok()
 local project_java_version = utils.detect_project_java_version(root_dir)
 local trusted_checksums = gradle.init()
 
+local cmd = {
+	"jdtls",
+	"--java-executable",
+	java_bin,
+}
+if lombok_path then
+	table.insert(cmd, "--jvm-arg=-javaagent:" .. lombok_path)
+end
+vim.list_extend(cmd, {
+	"--jvm-arg=-Xmx2G",
+	"-data",
+	workspace_project_dir,
+})
+
 local config = {
-	cmd = {
-		"jdtls",
-		"--java-executable",
-		java_bin,
-		"--jvm-arg=-javaagent:" .. lombok_path,
-		"--jvm-arg=-Xmx2G",
-		"-data",
-		workspace_project_dir,
-	},
+	cmd = cmd,
 	root_dir = root_dir,
 	init_options = {
 		bundles = {},

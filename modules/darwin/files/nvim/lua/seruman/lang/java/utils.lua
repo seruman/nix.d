@@ -144,28 +144,11 @@ function M.setup_gradle_checksums(root_dir, trusted_checksums, save_checksums_fu
 	return checksum_entries
 end
 
-function M.ensure_lombok(workspace_dir)
-	-- Prefer a Nix-provided lombok.jar when available.
+function M.find_lombok()
 	if vim.env.LOMBOK_JAR and vim.fn.filereadable(vim.env.LOMBOK_JAR) == 1 then
 		return vim.env.LOMBOK_JAR
 	end
-
-	local lombok_path = workspace_dir .. "/lombok.jar"
-	if vim.fn.filereadable(lombok_path) ~= 1 then
-		vim.notify("Lombok jar not found. Downloading...", vim.log.levels.INFO)
-		vim.fn.system({
-			"curl",
-			"-fL",
-			"https://projectlombok.org/downloads/lombok.jar",
-			"-o",
-			lombok_path,
-		})
-		if vim.v.shell_error ~= 0 or vim.fn.getfsize(lombok_path) <= 0 then
-			vim.fn.delete(lombok_path)
-			vim.notify("Lombok download failed.", vim.log.levels.ERROR)
-		end
-	end
-	return lombok_path
+	return nil
 end
 
 -- Build the JDTLS `runtimes` list from environment variables.
