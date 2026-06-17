@@ -32,7 +32,6 @@
       "orbstack"
       "rectangle"
       "steermouse"
-      "tailscale-app"
     ];
     masApps = {
       "Amphetamine" = 937984704;

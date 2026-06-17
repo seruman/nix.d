@@ -1,5 +1,6 @@
 {
   pkgs,
+  unstable,
   ...
 }:
 
@@ -49,5 +50,10 @@ in
     computerName = "dumpedcore";
     hostName = "dumpedcore";
     localHostName = "dumpedcore";
+  };
+
+  services.tailscale = {
+    enable = true;
+    package = unstable.tailscale;
   };
 }
