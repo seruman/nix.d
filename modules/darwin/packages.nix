@@ -176,6 +176,7 @@ in
     unstable.rsync
     unstable.ruff
     unstable.sad
+    unstable.tree
     unstable.watch
     unstable.yq
 
