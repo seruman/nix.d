@@ -53,6 +53,7 @@ titlebar {
 }
 
 keytable "root" {
+    bind "cmd+p" action="palette" target="commands"
     bind "ctrl+b" action="switch-table" table="prefix"
     bind "ctrl+k" action="clear-screen"
 }
@@ -65,6 +66,7 @@ keytable "prefix" {
     bind "backslash" action="split" direction="right"
 
     // Pane management
+    bind "o" action="palette" target="panes" scope="all-tabs"
     bind "x" action="close-pane"
     bind "z" action="zoom-pane"
 
