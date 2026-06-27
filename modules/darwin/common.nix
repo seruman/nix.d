@@ -204,6 +204,12 @@ in
 
       CustomUserPreferences = {
         NSGlobalDomain.SLSMenuBarUseBlurredAppearance = 1;
+
+        # Kill the floating "A" language-indicator bubble that pops up next to
+        # text cursors when switching input sources. Documented as
+        # TSMLanguageIndicatorEnabled on the global domain. Takes effect after
+        # re-login.
+        NSGlobalDomain.TSMLanguageIndicatorEnabled = 0;
       };
 
       finder = {
