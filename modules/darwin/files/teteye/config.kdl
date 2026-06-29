@@ -95,10 +95,35 @@ keytable "prefix" {
     // Search
     bind "slash" action="search"
 
+    // Copy/selection mode POC
+    bind "bracketleft" action="copy-mode" command="begin"
+
     // Resize mode
     bind "r" action="switch-table" table="resize"
 
     bind "escape" action="pop"
+}
+
+keytable "copy" {
+    stay true
+
+    bind "h" action="copy-mode" command="move" direction="left"
+    bind "j" action="copy-mode" command="move" direction="down"
+    bind "k" action="copy-mode" command="move" direction="up"
+    bind "l" action="copy-mode" command="move" direction="right"
+    bind "ctrl+b" action="copy-mode" command="move" direction="page_up"
+    bind "ctrl+f" action="copy-mode" command="move" direction="page_down"
+    bind "0" action="copy-mode" command="move" direction="beginning_of_line"
+    bind "$" action="copy-mode" command="move" direction="end_of_line"
+    bind "g" action="copy-mode" command="move" direction="home"
+    bind "shift+g" action="copy-mode" command="move" direction="end"
+    bind "v" action="copy-mode" command="visual" mode="character"
+    bind "shift+v" action="copy-mode" command="visual" mode="line"
+    bind "ctrl+v" action="copy-mode" command="visual" mode="rectangle"
+    bind "y" action="copy-mode" command="yank"
+    bind "enter" action="copy-mode" command="yank"
+    bind "escape" action="copy-mode" command="cancel"
+    bind "q" action="copy-mode" command="cancel"
 }
 
 keytable "resize" {
