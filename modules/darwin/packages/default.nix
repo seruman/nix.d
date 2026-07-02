@@ -60,6 +60,14 @@ in
     unstable.wasmtime
     unstable.zig
 
+    # Nix tooling.
+    unstable.deadnix
+    unstable.nix-diff
+    unstable.nix-output-monitor
+    unstable.nix-tree
+    unstable.nvd
+    unstable.statix
+
     # Shell/git/search
     unstable.git
     unstable.as-tree

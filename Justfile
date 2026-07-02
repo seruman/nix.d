@@ -41,6 +41,10 @@ fmt:
 update:
     nix flake update
 
+# Remove old Homebrew downloads, caches, and stale lock files.
+brew-cleanup:
+    brew cleanup --prune=all -s
+
 # Show current generation target.
 current:
     readlink /run/current-system

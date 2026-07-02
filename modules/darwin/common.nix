@@ -195,6 +195,9 @@ in
       NSGlobalDomain = {
         ApplePressAndHoldEnabled = false;
         AppleShowAllExtensions = true;
+        NSAutomaticDashSubstitutionEnabled = false;
+        NSAutomaticPeriodSubstitutionEnabled = false;
+        NSAutomaticQuoteSubstitutionEnabled = false;
         InitialKeyRepeat = 15;
         KeyRepeat = 1;
         "com.apple.sound.beep.volume" = 0.0;

@@ -68,14 +68,12 @@ in
     EDITOR = "nvim";
     PAGER = "less";
     LESS = "-R --mouse";
-    BUN_INSTALL = "${config.home.homeDirectory}/.bun";
     LIGHTPANDA_DISABLE_TELEMETRY = "true";
   };
 
   home.sessionPath = [
     "${config.home.homeDirectory}/go/bin"
     "${config.home.homeDirectory}/.cargo/bin"
-    "${config.home.homeDirectory}/.bun/bin"
     "${config.home.homeDirectory}/bin"
     "${config.home.homeDirectory}/sbin"
   ];
