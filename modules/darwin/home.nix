@@ -221,20 +221,6 @@ in
       minimumReleaseAge = 604800
     '';
 
-    "Library/Application Support/qmk/qmk.ini" = {
-      force = true;
-      text = ''
-        [config]
-
-        [user]
-        qmk_home = ${config.home.homeDirectory}/src/github.com/seruman/qmk_firmware
-
-        [console]
-
-        [general]
-      '';
-    };
-
     ".pi/agent/settings.json" = {
       source = config.lib.meta.mkConfigSource (file "pi/agent/settings.json");
       force = true;

@@ -273,7 +273,6 @@ in
     unstable.massren
     unstable.mergiraf
     unstable.mpv
-    unstable.qmk
     unstable.rsync
     unstable.ruff
     unstable.sad
