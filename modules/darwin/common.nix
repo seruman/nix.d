@@ -230,6 +230,8 @@ in
       };
 
       screencapture.location = cfg.screenshotsDirectory;
+
+      WindowManager.EnableStandardClickToShowDesktop = false;
     };
 
     home-manager = {
