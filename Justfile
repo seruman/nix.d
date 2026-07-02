@@ -24,13 +24,13 @@ activate-path:
 
 # Check formatting and buildability.
 check:
-    nixfmt --check flake.nix modules/darwin/*.nix modules/darwin/home/*.nix hosts/darwin/dumpedcore/*.nix hosts/nixos/nixpi/*.nix
+    nix fmt -- --check flake.nix modules/darwin/*.nix modules/darwin/home/*.nix modules/darwin/packages/*.nix hosts/darwin/dumpedcore/*.nix hosts/nixos/nixpi/*.nix
     nix build {{system}} --no-link --print-out-paths
     nix eval .#nixosConfigurations.nixpi.config.system.build.toplevel.drvPath
 
 # Format Nix files.
 fmt:
-    nixfmt flake.nix modules/darwin/*.nix modules/darwin/home/*.nix hosts/darwin/dumpedcore/*.nix hosts/nixos/nixpi/*.nix
+    nix fmt flake.nix modules/darwin/*.nix modules/darwin/home/*.nix modules/darwin/packages/*.nix hosts/darwin/dumpedcore/*.nix hosts/nixos/nixpi/*.nix
 
 # Update flake inputs.
 update:
