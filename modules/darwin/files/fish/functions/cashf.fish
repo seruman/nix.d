@@ -53,19 +53,19 @@ function cashf --description 'Fuzzy browse cashfish cache'
         set -l timestamp (cat "$entry/timestamp" 2>/dev/null)
         set -l exit_code (cat "$entry/exit_code" 2>/dev/null)
         set -l command_lines (cat "$entry/command" 2>/dev/null)
-        if test (count $command_lines) -gt 0; and string match -q -- "--" $command_lines[1]
+        if test (count $command_lines) -gt 0; and string match -q -- -- $command_lines[1]
             set command_lines $command_lines[2..-1]
         end
         set -l command (string join ' ' -- $command_lines)
 
         set -l scope_lines (cat "$entry/scope" 2>/dev/null)
-        if test (count $scope_lines) -gt 0; and string match -q -- "--" $scope_lines[1]
+        if test (count $scope_lines) -gt 0; and string match -q -- -- $scope_lines[1]
             set scope_lines $scope_lines[2..-1]
         end
         set -l scope (string join ' ' -- $scope_lines)
 
         set -l ttl_seconds_lines (cat "$entry/ttl_seconds" 2>/dev/null)
-        if test (count $ttl_seconds_lines) -gt 0; and string match -q -- "--" $ttl_seconds_lines[1]
+        if test (count $ttl_seconds_lines) -gt 0; and string match -q -- -- $ttl_seconds_lines[1]
             set ttl_seconds_lines $ttl_seconds_lines[2..-1]
         end
         set -l ttl_seconds_raw (string join ' ' -- $ttl_seconds_lines)
@@ -85,14 +85,14 @@ function cashf --description 'Fuzzy browse cashfish cache'
 
         set -l age_label (_cashf_format_age $age_seconds)
 
-    set -l entry_state fresh
-    if test $age_seconds -le 0
-        set entry_state expired
-    else if string match -qr '^[0-9]+$' -- "$ttl_seconds_raw"
-        if test $age_seconds -gt $ttl_seconds_raw
+        set -l entry_state fresh
+        if test $age_seconds -le 0
             set entry_state expired
+        else if string match -qr '^[0-9]+$' -- "$ttl_seconds_raw"
+            if test $age_seconds -gt $ttl_seconds_raw
+                set entry_state expired
+            end
         end
-    end
 
         if test -z "$exit_code"
             set exit_code "?"
@@ -126,8 +126,7 @@ function cashf --description 'Fuzzy browse cashfish cache'
         --prompt 'cashf> ' \
         --preview '_cashf_preview {2}' \
         --preview-window 'right,60%,wrap' \
-        --expect=ctrl-d \
-    > "$selection_file"
+        --expect=ctrl-d >"$selection_file"
 
     if not test -s "$selection_file"
         rm -f "$selection_file"
@@ -137,7 +136,7 @@ function cashf --description 'Fuzzy browse cashfish cache'
     set -l selection
     while read -l line
         set -a selection -- "$line"
-    end < "$selection_file"
+    end <"$selection_file"
     rm -f "$selection_file"
 
     if test (count $selection) -eq 0
@@ -151,7 +150,7 @@ function cashf --description 'Fuzzy browse cashfish cache'
         return 0
     end
 
-    if test "$key" = "ctrl-d"
+    if test "$key" = ctrl-d
         set -l to_delete
         for line in $picks
             set -l fields (string split -m 1 $tab -- $line)
@@ -168,7 +167,7 @@ function cashf --description 'Fuzzy browse cashfish cache'
         set -l count (count $to_delete)
         read -l -P "Delete $count cache entr(y/ies)? [y/N] " confirm
         set -l confirm_l (string lower -- "$confirm")
-        if test "$confirm_l" = "y" -o "$confirm_l" = "yes"
+        if test "$confirm_l" = y -o "$confirm_l" = yes
             for path in $to_delete
                 if test -d "$path"
                     if string match -q "$cache_dir/*" "$path"

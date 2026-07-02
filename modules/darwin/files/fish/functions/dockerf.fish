@@ -42,7 +42,6 @@ function __dockerf_rmi -a query
     __dockerf_cmd "Remove Image(s)" "docker images" "docker rmi" 3 $query
 end
 
-
 function __dockerf_cmd -a prompt -a input_cmd -a action_cmd -a field -a query
     if not set -q input_cmd
         echo "command is required" >&2

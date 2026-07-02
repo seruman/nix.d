@@ -6,6 +6,8 @@ rebuild := "/run/current-system/sw/bin/darwin-rebuild"
 nixpi := "seruman@nixpi.local"
 nixpi-target := "/etc/nixos"
 keepy-bin := "/var/lib/keepy/bin/keep"
+nix-files := "flake.nix modules/darwin/*.nix modules/darwin/home/*.nix modules/darwin/packages/*.nix hosts/darwin/dumpedcore/*.nix hosts/nixos/nixpi/*.nix"
+fish-files := "modules/darwin/files/fish/config.fish modules/darwin/files/fish/conf.d/*.fish modules/darwin/files/fish/functions/*.fish modules/darwin/files/fish/completions/*.fish modules/darwin/files/fish/pkg/*.fish"
 
 _default:
     just --list
@@ -24,13 +26,16 @@ activate-path:
 
 # Check formatting and buildability.
 check:
-    nix fmt -- --check flake.nix modules/darwin/*.nix modules/darwin/home/*.nix modules/darwin/packages/*.nix hosts/darwin/dumpedcore/*.nix hosts/nixos/nixpi/*.nix
+    nix fmt -- --check {{nix-files}}
+    fish -n {{fish-files}}
+    fish_indent --check {{fish-files}}
     nix build {{system}} --no-link --print-out-paths
     nix eval .#nixosConfigurations.nixpi.config.system.build.toplevel.drvPath
 
-# Format Nix files.
+# Format Nix and fish files.
 fmt:
-    nix fmt flake.nix modules/darwin/*.nix modules/darwin/home/*.nix modules/darwin/packages/*.nix hosts/darwin/dumpedcore/*.nix hosts/nixos/nixpi/*.nix
+    nix fmt {{nix-files}}
+    fish_indent --write {{fish-files}}
 
 # Update flake inputs.
 update:

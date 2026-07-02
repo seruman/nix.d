@@ -11,25 +11,25 @@ function _cashf_preview --description 'Preview cache entry for cashf'
     end
 
     set -l command_lines (cat "$cache_path/command" 2>/dev/null)
-    if test (count $command_lines) -gt 0; and string match -q -- "--" $command_lines[1]
+    if test (count $command_lines) -gt 0; and string match -q -- -- $command_lines[1]
         set command_lines $command_lines[2..-1]
     end
     set -l command (string join ' ' -- $command_lines)
 
     set -l scope_lines (cat "$cache_path/scope" 2>/dev/null)
-    if test (count $scope_lines) -gt 0; and string match -q -- "--" $scope_lines[1]
+    if test (count $scope_lines) -gt 0; and string match -q -- -- $scope_lines[1]
         set scope_lines $scope_lines[2..-1]
     end
     set -l scope (string join ' ' -- $scope_lines)
 
     set -l ttl_lines (cat "$cache_path/ttl" 2>/dev/null)
-    if test (count $ttl_lines) -gt 0; and string match -q -- "--" $ttl_lines[1]
+    if test (count $ttl_lines) -gt 0; and string match -q -- -- $ttl_lines[1]
         set ttl_lines $ttl_lines[2..-1]
     end
     set -l ttl (string join ' ' -- $ttl_lines)
 
     set -l ttl_seconds_lines (cat "$cache_path/ttl_seconds" 2>/dev/null)
-    if test (count $ttl_seconds_lines) -gt 0; and string match -q -- "--" $ttl_seconds_lines[1]
+    if test (count $ttl_seconds_lines) -gt 0; and string match -q -- -- $ttl_seconds_lines[1]
         set ttl_seconds_lines $ttl_seconds_lines[2..-1]
     end
     set -l ttl_seconds (string join ' ' -- $ttl_seconds_lines)

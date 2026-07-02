@@ -245,7 +245,7 @@ end
 # Execute command and cache results if successful
 function _cashfish_execute_and_cache -a cache_path ttl_raw ttl_seconds scope
     set -l command_parts $argv[5..-1]
-    if test (count $command_parts) -gt 0; and string match -q -- "--" $command_parts[1]
+    if test (count $command_parts) -gt 0; and string match -q -- -- $command_parts[1]
         set command_parts $command_parts[2..-1]
     end
 

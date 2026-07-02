@@ -1,11 +1,11 @@
 function _cashf_format_age -a age_seconds --description 'Format age in seconds'
     if test -z "$age_seconds"
-        echo "unknown"
+        echo unknown
         return 0
     end
 
     if test $age_seconds -lt 0
-        echo "unknown"
+        echo unknown
         return 0
     end
 

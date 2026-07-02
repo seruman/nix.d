@@ -7,7 +7,14 @@
 }:
 
 let
-  derivations = import ./derivations.nix { inherit lib pkgs unstable inputs; };
+  derivations = import ./derivations.nix {
+    inherit
+      lib
+      pkgs
+      unstable
+      inputs
+      ;
+  };
   inherit (derivations)
     glide
     bttf
