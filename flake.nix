@@ -25,33 +25,47 @@
     opnix.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
     pi.url = "github:lukasl-dev/pi.nix";
+    pi.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
   };
 
   outputs =
-    inputs@{ nix-darwin, ... }:
+    inputs@{
+      self,
+      nix-darwin,
+      nixpkgs,
+      nixpkgs-nixos,
+      ...
+    }:
     let
       darwinSystem = "aarch64-darwin";
       linuxSystem = "aarch64-linux";
-      commonDarwinModule = import ./modules/darwin/common.nix { inherit inputs; };
     in
     {
-      darwinModules.common = commonDarwinModule;
+      # Reusable Darwin base module. Downstream flakes consume it as a path
+      # and pass `inputs` via `specialArgs`, so it composes cleanly.
+      darwinModules.common = ./modules/darwin/common.nix;
 
       darwinConfigurations.dumpedcore = nix-darwin.lib.darwinSystem {
         system = darwinSystem;
         specialArgs = { inherit inputs; };
         modules = [
-          commonDarwinModule
+          ./modules/darwin/common.nix
           ./hosts/darwin/dumpedcore
         ];
       };
 
-      nixosConfigurations.nixpi = inputs.nixpkgs-nixos.lib.nixosSystem {
+      nixosConfigurations.nixpi = nixpkgs-nixos.lib.nixosSystem {
         system = linuxSystem;
         specialArgs = { inherit inputs; };
         modules = [ ./hosts/nixos/nixpi ];
       };
+
+      formatter.${darwinSystem} = nixpkgs.legacyPackages.${darwinSystem}.nixfmt;
+      formatter.${linuxSystem} = nixpkgs-nixos.legacyPackages.${linuxSystem}.nixfmt;
+
+      checks.${darwinSystem}.darwin-build = self.darwinConfigurations.dumpedcore.system;
+      checks.${linuxSystem}.nixos-build = self.nixosConfigurations.nixpi.config.system.build.toplevel;
     };
 }
