@@ -13,11 +13,11 @@ let
     pkgs.runCommand "homebrew-seruman-dumpedcore-tap" { nativeBuildInputs = [ pkgs.git ]; }
       ''
         mkdir -p "$out/Casks"
-        cp ${./homebrew-casks/epson-connect-printer-setup.rb} "$out/Casks/epson-connect-printer-setup.rb"
-        cp ${./homebrew-casks/epson-l8050-driver.rb} "$out/Casks/epson-l8050-driver.rb"
-        cp ${./homebrew-casks/epson-photo-plus.rb} "$out/Casks/epson-photo-plus.rb"
-        cp ${./homebrew-casks/epson-software-updater.rb} "$out/Casks/epson-software-updater.rb"
-        cp ${./homebrew-casks/unfolder.rb} "$out/Casks/unfolder.rb"
+        cp ${./homebrew/casks/epson-connect-printer-setup.rb} "$out/Casks/epson-connect-printer-setup.rb"
+        cp ${./homebrew/casks/epson-l8050-driver.rb} "$out/Casks/epson-l8050-driver.rb"
+        cp ${./homebrew/casks/epson-photo-plus.rb} "$out/Casks/epson-photo-plus.rb"
+        cp ${./homebrew/casks/epson-software-updater.rb} "$out/Casks/epson-software-updater.rb"
+        cp ${./homebrew/casks/unfolder.rb} "$out/Casks/unfolder.rb"
 
         git -C "$out" init -q
         git -C "$out" config user.email nix@example.invalid
@@ -29,7 +29,7 @@ in
 {
   imports = [
     ./activation.nix
-    ./homebrew.nix
+    ./homebrew
     ./packages.nix
   ];
 
