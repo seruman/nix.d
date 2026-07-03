@@ -9,7 +9,6 @@ let
   keepyGroup = "keepy";
   keepyDataDir = "/var/lib/keepy";
   keepyBinDir = "${keepyDataDir}/bin";
-  keepyRuntimeDir = "/run/keepy";
   keepySecretsDir = "${keepyDataDir}/secrets";
   unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system};
   opnix = inputs.opnix.packages.${pkgs.system}.default;

@@ -41,6 +41,21 @@
     let
       darwinSystem = "aarch64-darwin";
       linuxSystem = "aarch64-linux";
+
+      darwinPkgs = import nixpkgs {
+        system = darwinSystem;
+        config.allowUnfree = true;
+      };
+      unstableDarwinPkgs = import inputs.nixpkgs-unstable {
+        system = darwinSystem;
+        config.allowUnfree = true;
+      };
+      localDarwinPackages = import ./modules/darwin/packages/derivations.nix {
+        lib = darwinPkgs.lib;
+        pkgs = darwinPkgs;
+        unstable = unstableDarwinPkgs;
+        inherit inputs;
+      };
     in
     {
       # Reusable Darwin base module. Downstream flakes consume it as a path
@@ -62,10 +77,29 @@
         modules = [ ./hosts/nixos/nixpi ];
       };
 
+      packages.${darwinSystem} = {
+        inherit (localDarwinPackages)
+          bttf
+          cloudflareCf
+          gitHunks
+          glimpseui
+          wb
+          ;
+      };
+
       formatter.${darwinSystem} = nixpkgs.legacyPackages.${darwinSystem}.nixfmt;
       formatter.${linuxSystem} = nixpkgs-nixos.legacyPackages.${linuxSystem}.nixfmt;
 
-      checks.${darwinSystem}.darwin-build = self.darwinConfigurations.dumpedcore.system;
+      checks.${darwinSystem} = {
+        darwin-build = self.darwinConfigurations.dumpedcore.system;
+        inherit (self.packages.${darwinSystem})
+          bttf
+          cloudflareCf
+          gitHunks
+          glimpseui
+          wb
+          ;
+      };
       checks.${linuxSystem}.nixos-build = self.nixosConfigurations.nixpi.config.system.build.toplevel;
     };
 }

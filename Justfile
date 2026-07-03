@@ -8,6 +8,7 @@ nixpi-target := "/etc/nixos"
 keepy-bin := "/var/lib/keepy/bin/keep"
 nix-files := "flake.nix modules/darwin/*.nix modules/darwin/home/*.nix modules/darwin/packages/*.nix hosts/darwin/dumpedcore/*.nix hosts/nixos/nixpi/*.nix"
 fish-files := "modules/darwin/files/fish/config.fish modules/darwin/files/fish/conf.d/*.fish modules/darwin/files/fish/functions/*.fish modules/darwin/files/fish/completions/*.fish modules/darwin/files/fish/pkg/*.fish"
+local-package-checks := ".#checks.aarch64-darwin.bttf .#checks.aarch64-darwin.cloudflareCf .#checks.aarch64-darwin.gitHunks .#checks.aarch64-darwin.glimpseui .#checks.aarch64-darwin.wb"
 
 _default:
     just --list
@@ -27,8 +28,11 @@ activate-path:
 # Check formatting and buildability.
 check:
     nix fmt -- --check {{nix-files}}
+    nix shell --inputs-from . nixpkgs-unstable#deadnix -c deadnix --fail {{nix-files}}
+    nix shell --inputs-from . nixpkgs-unstable#statix -c statix check .
     fish -n {{fish-files}}
     fish_indent --check {{fish-files}}
+    nix build {{local-package-checks}} --no-link --print-out-paths
     nix build {{system}} --no-link --print-out-paths
     nix eval .#nixosConfigurations.nixpi.config.system.build.toplevel.drvPath
 
