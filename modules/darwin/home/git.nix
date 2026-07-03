@@ -29,6 +29,8 @@
       merge.conflictstyle = "diff3";
       init.defaultBranch = "main";
 
+      feature.manyFiles = true;
+
       ghq = {
         vsc = "git";
         root = "~/src";
