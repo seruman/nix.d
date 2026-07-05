@@ -2,13 +2,8 @@
   description = "Selman's macOS nix-darwin configuration";
 
   inputs = {
-    # Stable base for nix-darwin/Home Manager/system plumbing.
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
-
-    # Stable base for NixOS hosts.
     nixpkgs-nixos.url = "github:NixOS/nixpkgs/nixos-25.05";
-
-    # Selective bleeding-edge packages, used explicitly by host configs.
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     nix-darwin.url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
@@ -58,8 +53,6 @@
       };
     in
     {
-      # Reusable Darwin base module. Downstream flakes consume it as a path
-      # and pass `inputs` via `specialArgs`, so it composes cleanly.
       darwinModules.common = ./modules/darwin/common.nix;
 
       darwinConfigurations.dumpedcore = nix-darwin.lib.darwinSystem {

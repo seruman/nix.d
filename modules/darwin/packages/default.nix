@@ -38,11 +38,9 @@ in
   };
 
   environment.systemPackages = [
-    # Unfree
     unstable._1password-cli
     unstable.claude-code
 
-    # Language/runtime and toolchains.
     glide
     bttf
     unstable.biome
@@ -60,7 +58,6 @@ in
     unstable.wasmtime
     unstable.zig
 
-    # Nix tooling.
     unstable.deadnix
     unstable.nix-diff
     unstable.nix-output-monitor
@@ -68,7 +65,6 @@ in
     unstable.nvd
     unstable.statix
 
-    # Shell/git/search
     unstable.git
     unstable.as-tree
     unstable.chafa
@@ -112,13 +108,10 @@ in
     unstable.watch
     unstable.yq
 
-    # Docker stuff.
     unstable.docker-client
     unstable.docker-buildx
     unstable.docker-compose
 
-    # Neovim/general language servers and formatters not owned by
-    # language runtimes/toolchains.
     unstable.bash-language-server
     unstable.clang-tools
     unstable.csharpier
