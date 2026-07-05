@@ -18,6 +18,7 @@
     ];
     casks = [
       "1password"
+      "seruman/common/sleeve"
       {
         name = "seruman/common/teteye";
         greedy = true;
