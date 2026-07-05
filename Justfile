@@ -3,8 +3,8 @@ set shell := ["/usr/bin/env", "bash", "-euo", "pipefail", "-c"]
 flake := ".#dumpedcore"
 system := ".#darwinConfigurations.dumpedcore.system"
 rebuild := "/run/current-system/sw/bin/darwin-rebuild"
-nixpi := "seruman@nixpi.local"
-nixpi-target := "/etc/nixos"
+nixpi := env_var_or_default("NIXPI_HOST", "nixpi")
+nixpi-repo := env_var_or_default("NIXPI_REPO", "~/etc/nix")
 keepy-bin := "/var/lib/keepy/bin/keep"
 nix-files := "flake.nix modules/darwin/*.nix modules/darwin/home/*.nix modules/darwin/packages/*.nix hosts/darwin/dumpedcore/*.nix hosts/nixos/nixpi/*.nix"
 fish-files := "modules/darwin/files/fish/config.fish modules/darwin/files/fish/conf.d/*.fish modules/darwin/files/fish/functions/*.fish modules/darwin/files/fish/completions/*.fish modules/darwin/files/fish/pkg/*.fish"
@@ -53,10 +53,9 @@ brew-cleanup:
 current:
     readlink /run/current-system
 
-# Copy this flake to nixpi and activate it there.
+# Fetch this flake on nixpi and activate it there.
 nixpi-switch:
-    rsync -az --delete --rsync-path='sudo rsync' --exclude .git --exclude result --exclude TODO.md ./ {{nixpi}}:{{nixpi-target}}/
-    ssh {{nixpi}} 'sudo nixos-rebuild switch --flake {{nixpi-target}}#nixpi'
+    ssh {{nixpi}} 'cd {{nixpi-repo}} && git fetch origin main && git reset --hard origin/main && sudo nixos-rebuild switch --flake .#nixpi'
 
 # Stream keepy service logs from nixpi.
 nixpi-keepy-logs:

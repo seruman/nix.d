@@ -15,6 +15,7 @@ let
   keepyGitHubTokenSecretRef = "op://Homelab/keepy-github-token/password";
   keepyXCookiesSecretRef = "op://Homelab/keepy-x-cookies/password";
   keepyCloudflaredTunnelTokenSecretRef = "op://Homelab/keepy-cloudflared-tunnel-token/password";
+  nixRepoDeployKeyPath = "/home/${user}/.ssh/nix-d-deploy-key";
   keepyOpnixConfig = pkgs.writeText "keepy-opnix.json" ''
     {
       "secrets": [
@@ -90,6 +91,7 @@ in
   '';
 
   environment.systemPackages = with pkgs; [
+    gitMinimal
     htop
     iw
     neovim
@@ -134,6 +136,19 @@ in
     tailscale.enable = true;
   };
 
+  programs.ssh = {
+    extraConfig = ''
+      Host github.com-seruman-nix-d
+        HostName github.com
+        User git
+        IdentityFile ${nixRepoDeployKeyPath}
+        IdentitiesOnly yes
+        HostKeyAlias github.com-seruman-nix-d
+    '';
+    knownHosts."github.com-seruman-nix-d".publicKey =
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
+  };
+
   users = {
     mutableUsers = false;
     users.${user} = {
@@ -154,6 +169,7 @@ in
   };
 
   systemd.tmpfiles.rules = [
+    "d /home/${user}/.ssh 0700 ${user} users -"
     "d ${keepyDataDir} 0750 ${keepyUser} ${keepyGroup} -"
     "d ${keepyBinDir} 0755 ${keepyUser} ${keepyGroup} -"
     "d ${keepySecretsDir} 0750 ${keepyUser} ${keepyGroup} -"
