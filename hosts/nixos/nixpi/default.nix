@@ -2,7 +2,6 @@
 
 let
   user = "seruman";
-  ssid = "WIFI_SSID";
   interface = "wlan0";
   secretsDir = "/var/lib/nixos/secrets";
   keepyUser = "keepy";
@@ -80,8 +79,6 @@ in
     useDHCP = true;
     wireless = {
       enable = true;
-      secretsFile = "${secretsDir}/wireless.env";
-      networks.${ssid}.pskRaw = "ext:wifi_psk";
       interfaces = [ interface ];
     };
   };
