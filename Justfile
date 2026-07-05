@@ -6,8 +6,6 @@ rebuild := "/run/current-system/sw/bin/darwin-rebuild"
 nixpi := env_var_or_default("NIXPI_HOST", "nixpi")
 nixpi-repo := env_var_or_default("NIXPI_REPO", "~/etc/nix")
 keepy-bin := "/var/lib/keepy/bin/keep"
-nix-files := "flake.nix modules/darwin/*.nix modules/darwin/home/*.nix modules/darwin/packages/*.nix hosts/darwin/dumpedcore/*.nix hosts/nixos/nixpi/*.nix"
-fish-files := "modules/darwin/files/fish/config.fish modules/darwin/files/fish/conf.d/*.fish modules/darwin/files/fish/functions/*.fish modules/darwin/files/fish/completions/*.fish modules/darwin/files/fish/pkg/*.fish"
 local-package-checks := ".#checks.aarch64-darwin.bttf .#checks.aarch64-darwin.cloudflareCf .#checks.aarch64-darwin.gitHunks .#checks.aarch64-darwin.glimpseui .#checks.aarch64-darwin.wb"
 
 _default:
@@ -15,31 +13,33 @@ _default:
 
 # Build the nix-darwin system without switching.
 build:
-    nix build {{system}} --no-link --print-out-paths
+    nix build {{ system }} --no-link --print-out-paths
 
 # Build and activate the nix-darwin system.
 switch:
-    sudo {{rebuild}} switch --flake {{flake}}
+    sudo {{ rebuild }} switch --flake {{ flake }}
 
 # Build the system and show the resulting activation script path.
 activate-path:
-    out=$(nix build {{system}} --no-link --print-out-paths); echo "$out/activate"
+    out=$(nix build {{ system }} --no-link --print-out-paths); echo "$out/activate"
 
 # Check formatting and buildability.
 check:
-    nix fmt -- --check {{nix-files}}
-    nix shell --inputs-from . nixpkgs-unstable#deadnix -c deadnix --fail {{nix-files}}
+    just --fmt --check
+    nix fmt -- --check $(git ls-files '*.nix')
+    nix shell --inputs-from . nixpkgs-unstable#deadnix -c deadnix --fail $(git ls-files '*.nix')
     nix shell --inputs-from . nixpkgs-unstable#statix -c statix check .
-    fish -n {{fish-files}}
-    fish_indent --check {{fish-files}}
-    nix build {{local-package-checks}} --no-link --print-out-paths
-    nix build {{system}} --no-link --print-out-paths
+    fish -n $(git ls-files '*.fish')
+    fish_indent --check $(git ls-files '*.fish')
+    nix build {{ local-package-checks }} --no-link --print-out-paths
+    nix build {{ system }} --no-link --print-out-paths
     nix eval .#nixosConfigurations.nixpi.config.system.build.toplevel.drvPath
 
-# Format Nix and fish files.
+# Format Nix, fish, and just files.
 fmt:
-    nix fmt {{nix-files}}
-    fish_indent --write {{fish-files}}
+    just --fmt
+    nix fmt $(git ls-files '*.nix')
+    fish_indent --write $(git ls-files '*.fish')
 
 # Update flake inputs.
 update:
@@ -55,17 +55,17 @@ current:
 
 # Fetch this flake on nixpi and activate it there.
 nixpi-switch:
-    ssh {{nixpi}} 'cd {{nixpi-repo}} && git fetch origin main && git reset --hard origin/main && sudo nixos-rebuild switch --flake .#nixpi'
+    ssh {{ nixpi }} 'cd {{ nixpi-repo }} && git fetch origin main && git reset --hard origin/main && sudo nixos-rebuild switch --flake .#nixpi'
 
-# Stream keepy service logs from nixpi.
-nixpi-keepy-logs:
-    ssh {{nixpi}} 'sudo journalctl -u keepy.service -f'
+# Stream service logs from nixpi.
+nixpi-logf service:
+    ssh {{ nixpi }} 'sudo journalctl -u {{ service }} -f'
 
-# Show keepy service status on nixpi.
-nixpi-keepy-status:
-    ssh {{nixpi}} 'sudo systemctl status keepy.service --no-pager'
+# Show service status on nixpi.
+nixpi-status service:
+    ssh {{ nixpi }} 'sudo systemctl status {{ service }} --no-pager'
 
 # Copy a built keepy binary to nixpi and restart the service.
 nixpi-install-keepy localbin:
-    scp {{localbin}} {{nixpi}}:/tmp/keep
-    ssh {{nixpi}} 'sudo install -o keepy -g keepy -m 0755 /tmp/keep {{keepy-bin}} && rm -f /tmp/keep && sudo systemctl restart keepy.service'
+    scp {{ localbin }} {{ nixpi }}:/tmp/keep
+    ssh {{ nixpi }} 'sudo install -o keepy -g keepy -m 0755 /tmp/keep {{ keepy-bin }} && rm -f /tmp/keep && sudo systemctl restart keepy.service'
