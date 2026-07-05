@@ -20,7 +20,6 @@ let
     pkgs.runCommand "homebrew-seruman-common-tap" { nativeBuildInputs = [ pkgs.git ]; }
       ''
         mkdir -p "$out/Casks"
-        cp ${./homebrew/casks/1password.rb} "$out/Casks/1password.rb"
         cp ${./homebrew/casks/sleeve.rb} "$out/Casks/sleeve.rb"
         substitute ${./homebrew/casks/teteye.rb} "$out/Casks/teteye.rb" \
           --replace-fail "@opnix@" "${opnix}/bin/opnix"

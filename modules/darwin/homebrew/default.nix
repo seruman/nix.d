@@ -17,9 +17,7 @@
       "lightpanda-io/browser/lightpanda"
     ];
     casks = [
-      # Temporary local tap while Homebrew/homebrew-cask#265717 has the
-      # stale arm64 checksum for the current 1Password 8.12.21 download.
-      "seruman/common/1password"
+      "1password"
       {
         name = "seruman/common/teteye";
         greedy = true;
