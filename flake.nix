@@ -87,6 +87,17 @@
           ;
       };
 
+      devShells.${darwinSystem}.default = darwinPkgs.mkShellNoCC {
+        packages = [
+          darwinPkgs.fish
+          darwinPkgs.nixfmt
+          unstableDarwinPkgs.deadnix
+          unstableDarwinPkgs.git-filter-repo
+          unstableDarwinPkgs.just
+          unstableDarwinPkgs.statix
+        ];
+      };
+
       formatter.${darwinSystem} = nixpkgs.legacyPackages.${darwinSystem}.nixfmt;
       formatter.${linuxSystem} = nixpkgs-nixos.legacyPackages.${linuxSystem}.nixfmt;
 
