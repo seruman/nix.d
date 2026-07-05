@@ -43,7 +43,6 @@ in
       screenshotsDirectory
       username
       ;
-    mutableFiles.enable = false;
   };
 
   networking = {

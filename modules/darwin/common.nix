@@ -74,21 +74,9 @@ in
       description = "Home directory for the primary macOS login user.";
     };
 
-    configPath = lib.mkOption {
-      type = lib.types.str;
-      default = "${cfg.homeDirectory}/etc/nix";
-      description = "Mutable checkout path used when mutable file links are enabled.";
-    };
-
-    sourceRoot = lib.mkOption {
-      type = lib.types.str;
-      default = inputs.self.outPath;
-      description = "Source root of the reusable Darwin configuration.";
-    };
-
     filesRoot = lib.mkOption {
-      type = lib.types.str;
-      default = "${cfg.sourceRoot}/modules/darwin/files";
+      type = lib.types.path;
+      default = ./files;
       description = "Root directory for shared dotfiles managed by Home Manager.";
     };
 
@@ -96,12 +84,6 @@ in
       type = lib.types.str;
       default = "${cfg.homeDirectory}/etc/screenshots";
       description = "Directory used by macOS screencapture.";
-    };
-
-    mutableFiles.enable = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Use out-of-store symlinks into configPath for shared dotfiles.";
     };
   };
 

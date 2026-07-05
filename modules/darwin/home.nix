@@ -9,17 +9,6 @@
 
 let
   file = relativePath: "${serumanDarwin.filesRoot}/${relativePath}";
-
-  mutableTarget =
-    path:
-    serumanDarwin.configPath + lib.removePrefix (toString serumanDarwin.sourceRoot) (toString path);
-
-  configSource =
-    path:
-    if serumanDarwin.mutableFiles.enable then
-      config.lib.file.mkOutOfStoreSymlink (mutableTarget path)
-    else
-      path;
 in
 {
   imports = [
@@ -33,12 +22,6 @@ in
 
   home.username = serumanDarwin.username;
   home.homeDirectory = serumanDarwin.homeDirectory;
-
-  lib.meta = {
-    inherit (serumanDarwin) configPath filesRoot sourceRoot;
-    mkConfigSource = configSource;
-    mkMutableTarget = mutableTarget;
-  };
 
   # Keep this fixed after the first Home Manager activation.
   home.stateVersion = "26.05";
@@ -81,19 +64,6 @@ in
     run mkdir -p ${lib.escapeShellArg "${config.home.homeDirectory}/.xdg"}
     run chmod 700 ${lib.escapeShellArg "${config.home.homeDirectory}/.xdg"}
   '';
-
-  home.activation.glideWorkConfigSymlink = lib.mkIf serumanDarwin.mutableFiles.enable (
-    lib.hm.dag.entryAfter [ "linkGeneration" ] ''
-      glide_work_link=${lib.escapeShellArg (mutableTarget (file "glide/glide.work.ts"))}
-      glide_work_target=${lib.escapeShellArg "${config.xdg.configHome}/work/glide/glide.ts"}
-
-      if [ -e "$glide_work_link" ] && [ ! -L "$glide_work_link" ]; then
-        echo "not replacing non-symlink $glide_work_link" >&2
-      else
-        run ln -sfn "$glide_work_target" "$glide_work_link"
-      fi
-    ''
-  );
 
   services.macos-remap-keys = {
     enable = true;
@@ -219,18 +189,18 @@ in
     '';
 
     ".pi/agent/settings.json" = {
-      source = config.lib.meta.mkConfigSource (file "pi/agent/settings.json");
+      source = file "pi/agent/settings.json";
       force = true;
     };
 
     ".pi/agent/APPEND_SYSTEM.md" = {
-      source = config.lib.meta.mkConfigSource (file "pi/agent/APPEND_SYSTEM.md");
+      source = file "pi/agent/APPEND_SYSTEM.md";
       force = true;
     };
 
-    "bin/git-histcopy".source = config.lib.meta.mkConfigSource (file "bin/git-histcopy");
-    "bin/pils".source = config.lib.meta.mkConfigSource (file "bin/pils");
-    "bin/tmux-cssh".source = config.lib.meta.mkConfigSource (file "bin/tmux-cssh");
+    "bin/git-histcopy".source = file "bin/git-histcopy";
+    "bin/pils".source = file "bin/pils";
+    "bin/tmux-cssh".source = file "bin/tmux-cssh";
   };
 
   xdg.configFile = {
@@ -239,16 +209,16 @@ in
       exclude-newer = "7 days"
     '';
 
-    "nvim".source = config.lib.meta.mkConfigSource (file "nvim");
+    "nvim".source = file "nvim";
 
-    "glide/biome.json".source = config.lib.meta.mkConfigSource (file "glide/biome.json");
-    "glide/commands.glide.ts".source = config.lib.meta.mkConfigSource (file "glide/commands.glide.ts");
-    "glide/github.glide.ts".source = config.lib.meta.mkConfigSource (file "glide/github.glide.ts");
-    "glide/glide.ts".source = config.lib.meta.mkConfigSource (file "glide/glide.ts");
-    "glide/package.json".source = config.lib.meta.mkConfigSource (file "glide/package.json");
-    "glide/tsconfig.json".source = config.lib.meta.mkConfigSource (file "glide/tsconfig.json");
-    "glide/ui.glide.ts".source = config.lib.meta.mkConfigSource (file "glide/ui.glide.ts");
-    "teteye".source = config.lib.meta.mkConfigSource (file "teteye");
+    "glide/biome.json".source = file "glide/biome.json";
+    "glide/commands.glide.ts".source = file "glide/commands.glide.ts";
+    "glide/github.glide.ts".source = file "glide/github.glide.ts";
+    "glide/glide.ts".source = file "glide/glide.ts";
+    "glide/package.json".source = file "glide/package.json";
+    "glide/tsconfig.json".source = file "glide/tsconfig.json";
+    "glide/ui.glide.ts".source = file "glide/ui.glide.ts";
+    "teteye".source = file "teteye";
   };
 
 }
