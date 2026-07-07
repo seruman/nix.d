@@ -79,6 +79,8 @@
           cloudflareCf
           gitHunks
           glimpseui
+          sleeve
+          unfolder
           wb
           ;
       };
@@ -104,6 +106,8 @@
           cloudflareCf
           gitHunks
           glimpseui
+          sleeve
+          unfolder
           wb
           ;
       };

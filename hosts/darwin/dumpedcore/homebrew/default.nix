@@ -10,11 +10,12 @@
       }
     ];
     casks = [
+      # Epson installers write printer drivers, USB kexts, pkg receipts, and apps
+      # under /Library and /Applications/Epson Software; keep Homebrew as the pkg owner.
       "seruman/dumpedcore/epson-connect-printer-setup"
       "seruman/dumpedcore/epson-l8050-driver"
       "seruman/dumpedcore/epson-photo-plus"
       "seruman/dumpedcore/epson-software-updater"
-      "seruman/dumpedcore/unfolder"
       "affinity"
       "mullvad-browser"
       "mullvad-vpn"

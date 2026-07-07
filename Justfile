@@ -6,7 +6,7 @@ rebuild := "/run/current-system/sw/bin/darwin-rebuild"
 nixpi := env_var_or_default("NIXPI_HOST", "nixpi")
 nixpi-repo := env_var_or_default("NIXPI_REPO", "~/etc/nix")
 keepy-bin := "/var/lib/keepy/bin/keep"
-local-package-checks := ".#checks.aarch64-darwin.bttf .#checks.aarch64-darwin.cloudflareCf .#checks.aarch64-darwin.gitHunks .#checks.aarch64-darwin.glimpseui .#checks.aarch64-darwin.wb"
+local-package-checks := ".#checks.aarch64-darwin.bttf .#checks.aarch64-darwin.cloudflareCf .#checks.aarch64-darwin.gitHunks .#checks.aarch64-darwin.glimpseui .#checks.aarch64-darwin.sleeve .#checks.aarch64-darwin.unfolder .#checks.aarch64-darwin.wb"
 
 _default:
     just --list
