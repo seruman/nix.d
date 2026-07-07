@@ -3,16 +3,12 @@
   lib,
   pkgs,
   inputs,
+  pkgsUnstable,
   ...
 }:
 
 let
   cfg = config.seruman.darwin;
-
-  unstable = import inputs.nixpkgs-unstable {
-    system = pkgs.stdenv.hostPlatform.system;
-    config.allowUnfree = true;
-  };
 
   opnix = inputs.opnix.packages.${pkgs.stdenv.hostPlatform.system}.default;
 
@@ -20,7 +16,6 @@ let
     pkgs.runCommand "homebrew-seruman-common-tap" { nativeBuildInputs = [ pkgs.git ]; }
       ''
         mkdir -p "$out/Casks"
-        cp ${./homebrew/casks/sleeve.rb} "$out/Casks/sleeve.rb"
         substitute ${./homebrew/casks/teteye.rb} "$out/Casks/teteye.rb" \
           --replace-fail "@opnix@" "${opnix}/bin/opnix"
 
@@ -88,11 +83,11 @@ in
 
   config = {
     _module.args = {
-      inherit unstable;
+      inherit pkgsUnstable;
       username = cfg.username;
       homeDirectory = cfg.homeDirectory;
       screenshotsDirectory = cfg.screenshotsDirectory;
-      inherit commonHomebrewTap;
+      inherit commonHomebrewTap turkishKeyboardLayout;
     };
 
     system.primaryUser = cfg.username;
@@ -138,14 +133,6 @@ in
       if [ -d /Applications/teteye.app ]; then
         xattr -dr com.apple.quarantine /Applications/teteye.app 2>/dev/null || true
       fi
-
-      mkdir -p ${lib.escapeShellArg cfg.screenshotsDirectory}
-      chown ${cfg.username}:staff ${lib.escapeShellArg cfg.screenshotsDirectory}
-
-      keyboard_layouts_dir=${lib.escapeShellArg "${cfg.homeDirectory}/Library/Keyboard Layouts"}
-      mkdir -p "$keyboard_layouts_dir"
-      install -m 0644 ${turkishKeyboardLayout}/TurkishQLegacyFixed.keylayout "$keyboard_layouts_dir/TurkishQLegacyFixed.keylayout"
-      chown ${cfg.username}:staff "$keyboard_layouts_dir/TurkishQLegacyFixed.keylayout"
     '';
 
     environment.variables = xdgEnvironment // {
@@ -220,10 +207,8 @@ in
     home-manager = {
       useGlobalPkgs = true;
       useUserPackages = true;
-      backupFileExtension = "hm-backup";
-      overwriteBackup = true;
       extraSpecialArgs = {
-        inherit inputs unstable;
+        inherit inputs pkgsUnstable turkishKeyboardLayout;
         serumanDarwin = cfg;
       };
       users.${cfg.username} = import ./home.nix;

@@ -13,7 +13,7 @@
 
   programs.git = {
     enable = true;
-    # Git itself is installed from nixpkgs-unstable at the system level.
+    # Git itself is installed from nixpkgs-unstable at the user level.
     package = null;
 
     includes = [

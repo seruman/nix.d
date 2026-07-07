@@ -2,13 +2,31 @@
   config,
   inputs,
   lib,
+  pkgs,
   serumanDarwin,
-  unstable,
+  turkishKeyboardLayout,
+  pkgsUnstable,
   ...
 }:
 
 let
   file = relativePath: "${serumanDarwin.filesRoot}/${relativePath}";
+
+  derivations = import ./packages/derivations.nix {
+    inherit
+      inputs
+      lib
+      pkgs
+      pkgsUnstable
+      ;
+  };
+  inherit (derivations)
+    bttf
+    cloudflareCf
+    gitHunks
+    glimpseui
+    wb
+    ;
 in
 {
   imports = [
@@ -51,6 +69,10 @@ in
     PAGER = "less";
     LESS = "-R --mouse";
     LIGHTPANDA_DISABLE_TELEMETRY = "true";
+    WB_UPDATE_CHECK = "off";
+    WB_NO_UPDATE_CHECK = "1";
+    WB_SKILL_AUTO_UPDATE = "off";
+    WB_NO_SKILL_AUTO_UPDATE = "1";
   };
 
   home.sessionPath = [
@@ -58,6 +80,104 @@ in
     "${config.home.homeDirectory}/.cargo/bin"
     "${config.home.homeDirectory}/bin"
     "${config.home.homeDirectory}/sbin"
+  ];
+
+  home.packages = [
+    pkgsUnstable._1password-cli
+    pkgsUnstable.claude-code
+
+    bttf
+    pkgsUnstable.biome
+    pkgsUnstable.bun
+    pkgsUnstable.go
+    pkgsUnstable.lua
+    pkgsUnstable.luarocks
+    pkgsUnstable.neovim
+    pkgsUnstable.nodejs
+    pkgsUnstable.openssh
+    pkgsUnstable.python3
+    pkgsUnstable.rustup
+    pkgsUnstable.uv
+    pkgsUnstable.wasmer
+    pkgsUnstable.wasmtime
+    pkgsUnstable.zig
+
+    pkgsUnstable.deadnix
+    pkgsUnstable.nix-diff
+    pkgsUnstable.nix-output-monitor
+    pkgsUnstable.nix-tree
+    pkgsUnstable.nvd
+    pkgsUnstable.statix
+
+    pkgsUnstable.git
+    pkgsUnstable.as-tree
+    pkgsUnstable.chafa
+    pkgsUnstable.colordiff
+    pkgsUnstable.curl
+    pkgsUnstable.diff-so-fancy
+    pkgsUnstable.difftastic
+    pkgsUnstable.duckdb
+    pkgsUnstable.ffmpeg
+    pkgsUnstable.gh
+    pkgsUnstable.ghq
+    pkgsUnstable.agent-browser
+    pkgsUnstable.cloudflared
+    cloudflareCf
+    gitHunks
+    wb
+    glimpseui
+    pkgsUnstable.git-filter-repo
+    pkgsUnstable.glow
+    pkgsUnstable.gnumake
+    pkgsUnstable.gojq
+    pkgsUnstable.gofumpt
+    pkgsUnstable.gopls
+    pkgsUnstable.gotest
+    pkgsUnstable.gotestsum
+    pkgsUnstable.gotools
+    pkgsUnstable.gum
+    pkgsUnstable.htop
+    pkgsUnstable.httpie
+    pkgsUnstable.hyperfine
+    pkgsUnstable.jq
+    pkgsUnstable.just
+    pkgsUnstable.less
+    pkgsUnstable.massren
+    pkgsUnstable.mergiraf
+    pkgsUnstable.mpv
+    pkgsUnstable.rsync
+    pkgsUnstable.ruff
+    pkgsUnstable.sad
+    pkgsUnstable.tree
+    pkgsUnstable.watch
+    pkgsUnstable.yq
+
+    pkgsUnstable.docker-client
+    pkgsUnstable.docker-buildx
+    pkgsUnstable.docker-compose
+
+    pkgsUnstable.bash-language-server
+    pkgsUnstable.clang-tools
+    pkgsUnstable.csharpier
+    pkgsUnstable.fish-lsp
+    pkgsUnstable.fishPlugins.forgit
+    pkgsUnstable.lua-language-server
+    pkgsUnstable.nixd
+    pkgsUnstable.nixfmt
+    pkgsUnstable.protobuf-language-server
+    pkgsUnstable.roslyn-ls
+    pkgsUnstable.shellcheck
+    pkgsUnstable.shfmt
+    pkgsUnstable.sourcekit-lsp
+    pkgsUnstable.stylua
+    pkgsUnstable.tailwindcss-language-server
+    pkgsUnstable.tree-sitter
+    pkgsUnstable.taplo
+    pkgsUnstable.terraform-ls
+    pkgsUnstable.typos-lsp
+    pkgsUnstable.typescript-language-server
+    pkgsUnstable.yaml-language-server
+    pkgsUnstable.zls
   ];
 
   home.activation.xdgRuntimeDir = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
@@ -82,7 +202,7 @@ in
 
   programs.fzf = {
     enable = true;
-    package = unstable.fzf;
+    package = pkgsUnstable.fzf;
     enableFishIntegration = true;
     defaultCommand = "fd --type f --hidden --exclude .git";
     defaultOptions = [
@@ -95,7 +215,7 @@ in
 
   programs.zoxide = {
     enable = true;
-    package = unstable.zoxide;
+    package = pkgsUnstable.zoxide;
     enableFishIntegration = true;
     options = [
       "--cmd"
@@ -105,14 +225,14 @@ in
 
   programs.direnv = {
     enable = true;
-    package = unstable.direnv;
+    package = pkgsUnstable.direnv;
     enableFishIntegration = true;
     stdlib = lib.mkBefore (builtins.readFile (file "direnv/direnvrc"));
   };
 
   programs.bat = {
     enable = true;
-    package = unstable.bat;
+    package = pkgsUnstable.bat;
     config.theme = "seruzen";
     themes.seruzen = {
       src = file "bat/themes";
@@ -122,7 +242,7 @@ in
 
   programs.fd = {
     enable = true;
-    package = unstable.fd;
+    package = pkgsUnstable.fd;
     ignores = [
       ".direnv/"
       "vendor/"
@@ -136,7 +256,7 @@ in
 
   programs.ripgrep = {
     enable = true;
-    package = unstable.ripgrep;
+    package = pkgsUnstable.ripgrep;
     arguments = [
       "--hidden"
       "--glob=!.git/"
@@ -153,7 +273,7 @@ in
 
   programs.tmux = {
     enable = true;
-    package = unstable.tmux;
+    package = pkgsUnstable.tmux;
     baseIndex = 1;
     escapeTime = 0;
     focusEvents = true;
@@ -164,7 +284,7 @@ in
     extraConfig = builtins.readFile (file "tmux/tmux.conf");
     plugins = [
       {
-        plugin = unstable.tmuxPlugins.prefix-highlight;
+        plugin = pkgsUnstable.tmuxPlugins.prefix-highlight;
         extraConfig = ''
           set -g @prefix_highlight_show_copy_mode 'on'
           set -g @prefix_highlight_show_sync_mode 'on'
@@ -187,6 +307,11 @@ in
       # Only install package versions published at least 7 days ago.
       minimumReleaseAge = 604800
     '';
+
+    "Library/Keyboard Layouts/TurkishQLegacyFixed.keylayout" = {
+      source = "${turkishKeyboardLayout}/TurkishQLegacyFixed.keylayout";
+      force = true;
+    };
 
     ".pi/agent/settings.json" = {
       source = file "pi/agent/settings.json";

@@ -1,7 +1,7 @@
 {
   lib,
   pkgs,
-  unstable,
+  pkgsUnstable,
   inputs,
 }:
 
@@ -75,7 +75,7 @@
 
   cloudflareCf =
     let
-      nodejs = unstable.nodejs;
+      nodejs = pkgsUnstable.nodejs;
     in
     pkgs.stdenvNoCC.mkDerivation (finalAttrs: {
       pname = "cloudflare-cf";
@@ -106,6 +106,63 @@
         mainProgram = "cf";
       };
     });
+
+  unfolder = pkgs.stdenvNoCC.mkDerivation {
+    pname = "unfolder";
+    version = "2.1.0";
+
+    src = pkgs.fetchurl {
+      name = "Unfolder-2.1.0.dmg";
+      url = "https://unfolder.app/Unfolder%202.1.0.dmg";
+      hash = "sha256-ujkPWsuHLiMapElnSP+Jol1KmFbjxV7l89NNCx+MmsM=";
+    };
+
+    nativeBuildInputs = [ pkgs._7zz ];
+    sourceRoot = ".";
+
+    installPhase = ''
+      runHook preInstall
+      mkdir -p "$out/Applications"
+      cp -R Unfolder.app "$out/Applications/"
+      runHook postInstall
+    '';
+
+    meta = {
+      description = "3D model unfolding tool for creating papercraft";
+      homepage = "https://unfolder.app/";
+      license = lib.licenses.unfree;
+      platforms = [ "aarch64-darwin" ];
+      sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
+    };
+  };
+
+  sleeve = pkgs.stdenvNoCC.mkDerivation {
+    pname = "sleeve";
+    version = "3.3";
+
+    src = pkgs.fetchurl {
+      url = "https://replay-sleeve-distribution.s3.amazonaws.com/latest/Sleeve.dmg";
+      hash = "sha256-8Rux0IgKJxj8Gw8wuyoUe/ytRFyhJFJG9Xxu5Xp/B+c=";
+    };
+
+    nativeBuildInputs = [ pkgs.undmg ];
+    sourceRoot = ".";
+
+    installPhase = ''
+      runHook preInstall
+      mkdir -p "$out/Applications"
+      cp -R Sleeve.app "$out/Applications/"
+      runHook postInstall
+    '';
+
+    meta = {
+      description = "Music accessory for the Mac";
+      homepage = "https://replay.software/sleeve";
+      license = lib.licenses.unfree;
+      platforms = [ "aarch64-darwin" ];
+      sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
+    };
+  };
 
   wb =
     let
@@ -171,7 +228,7 @@
     forceEmptyCache = true;
     npmFlags = [ "--ignore-scripts" ];
     npmBuildScript = "build:macos";
-    nodejs = unstable.nodejs;
+    nodejs = pkgsUnstable.nodejs;
 
     nativeBuildInputs = [ pkgs.swift ];
 

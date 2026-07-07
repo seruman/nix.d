@@ -41,14 +41,14 @@
         system = darwinSystem;
         config.allowUnfree = true;
       };
-      unstableDarwinPkgs = import inputs.nixpkgs-unstable {
+      darwinPkgsUnstable = import inputs.nixpkgs-unstable {
         system = darwinSystem;
         config.allowUnfree = true;
       };
       localDarwinPackages = import ./modules/darwin/packages/derivations.nix {
         lib = darwinPkgs.lib;
         pkgs = darwinPkgs;
-        unstable = unstableDarwinPkgs;
+        pkgsUnstable = darwinPkgsUnstable;
         inherit inputs;
       };
     in
@@ -57,7 +57,10 @@
 
       darwinConfigurations.dumpedcore = nix-darwin.lib.darwinSystem {
         system = darwinSystem;
-        specialArgs = { inherit inputs; };
+        specialArgs = {
+          inherit inputs;
+          pkgsUnstable = darwinPkgsUnstable;
+        };
         modules = [
           ./modules/darwin/common.nix
           ./hosts/darwin/dumpedcore
@@ -84,10 +87,10 @@
         packages = [
           darwinPkgs.fish
           darwinPkgs.nixfmt
-          unstableDarwinPkgs.deadnix
-          unstableDarwinPkgs.git-filter-repo
-          unstableDarwinPkgs.just
-          unstableDarwinPkgs.statix
+          darwinPkgsUnstable.deadnix
+          darwinPkgsUnstable.git-filter-repo
+          darwinPkgsUnstable.just
+          darwinPkgsUnstable.statix
         ];
       };
 

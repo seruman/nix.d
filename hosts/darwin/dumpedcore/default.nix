@@ -1,14 +1,10 @@
 {
   pkgs,
-  unstable,
+  pkgsUnstable,
   ...
 }:
 
 let
-  username = "selman";
-  homeDirectory = "/Users/${username}";
-  screenshotsDirectory = "${homeDirectory}/etc/screenshots";
-
   dumpedcoreHomebrewTap =
     pkgs.runCommand "homebrew-seruman-dumpedcore-tap" { nativeBuildInputs = [ pkgs.git ]; }
       ''
@@ -37,14 +33,6 @@ in
     inherit dumpedcoreHomebrewTap;
   };
 
-  seruman.darwin = {
-    inherit
-      homeDirectory
-      screenshotsDirectory
-      username
-      ;
-  };
-
   networking = {
     computerName = "dumpedcore";
     hostName = "dumpedcore";
@@ -53,6 +41,6 @@ in
 
   services.tailscale = {
     enable = true;
-    package = unstable.tailscale;
+    package = pkgsUnstable.tailscale;
   };
 }
