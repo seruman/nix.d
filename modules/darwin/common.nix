@@ -10,22 +10,6 @@
 let
   cfg = config.seruman.darwin;
 
-  opnix = inputs.opnix.packages.${pkgs.stdenv.hostPlatform.system}.default;
-
-  commonHomebrewTap =
-    pkgs.runCommand "homebrew-seruman-common-tap" { nativeBuildInputs = [ pkgs.git ]; }
-      ''
-        mkdir -p "$out/Casks"
-        substitute ${./homebrew/casks/teteye.rb} "$out/Casks/teteye.rb" \
-          --replace-fail "@opnix@" "${opnix}/bin/opnix"
-
-        git -C "$out" init -q
-        git -C "$out" config user.email nix@example.invalid
-        git -C "$out" config user.name nix
-        git -C "$out" add Casks
-        git -C "$out" commit -q -m init
-      '';
-
   turkishKeyboardLayout = pkgs.fetchFromGitHub {
     owner = "seruman";
     repo = "macos-turkish-keyboard-layout";
@@ -79,6 +63,7 @@ in
       default = "${cfg.homeDirectory}/etc/screenshots";
       description = "Directory used by macOS screencapture.";
     };
+
   };
 
   config = {
@@ -87,7 +72,7 @@ in
       username = cfg.username;
       homeDirectory = cfg.homeDirectory;
       screenshotsDirectory = cfg.screenshotsDirectory;
-      inherit commonHomebrewTap turkishKeyboardLayout;
+      inherit turkishKeyboardLayout;
     };
 
     system.primaryUser = cfg.username;
@@ -100,38 +85,9 @@ in
       config.allowUnfree = true;
     };
 
-    system.activationScripts.preActivation.text = ''
-      if [ -x /opt/homebrew/bin/brew ]; then
-        echo >&2 "Updating common Homebrew tap..."
-        sudo \
-          --preserve-env=PATH \
-          --user=${lib.escapeShellArg cfg.username} \
-          --set-home \
-          env \
-            HOMEBREW_NO_AUTO_UPDATE=1 \
-            HOMEBREW_NO_ENV_HINTS=1 \
-            HOMEBREW_NO_ANALYTICS=1 \
-            PATH="/opt/homebrew/bin:${lib.makeBinPath [ pkgs.git ]}:$PATH" \
-          /bin/bash -c ${lib.escapeShellArg ''
-            set -euo pipefail
-            tap_name=seruman/common
-            tap_url=file://${commonHomebrewTap}
-            tap_dir="$(brew --repository "$tap_name" 2>/dev/null || true)"
-
-            if [ -n "$tap_dir" ] && [ -d "$tap_dir/.git" ]; then
-              git -C "$tap_dir" remote set-url origin "$tap_url"
-              git -C "$tap_dir" fetch --force origin master
-              git -C "$tap_dir" reset --hard origin/master
-            else
-              brew tap "$tap_name" "$tap_url"
-            fi
-          ''}
-      fi
-    '';
-
     system.activationScripts.postActivation.text = ''
-      if [ -d /Applications/teteye.app ]; then
-        xattr -dr com.apple.quarantine /Applications/teteye.app 2>/dev/null || true
+      if [ -d "/Applications/Nix Apps/teteye.app" ]; then
+        xattr -dr com.apple.quarantine "/Applications/Nix Apps/teteye.app" 2>/dev/null || true
       fi
     '';
 

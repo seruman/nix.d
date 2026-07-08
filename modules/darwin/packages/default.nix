@@ -25,6 +25,7 @@ in
   environment.systemPackages = [
     derivations.glide
     derivations.sleeve
+    derivations.teteye
   ];
 
   environment.shells = [ pkgs.fish ];

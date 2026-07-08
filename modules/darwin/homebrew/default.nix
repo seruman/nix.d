@@ -1,4 +1,4 @@
-{ commonHomebrewTap, ... }:
+{ ... }:
 
 {
   homebrew = {
@@ -6,11 +6,6 @@
     enableFishIntegration = true;
     global.autoUpdate = false;
     taps = [
-      {
-        name = "seruman/common";
-        clone_target = "file://${commonHomebrewTap}";
-        force_auto_update = true;
-      }
       "lightpanda-io/browser"
     ];
     brews = [
@@ -18,10 +13,6 @@
     ];
     casks = [
       "1password"
-      {
-        name = "seruman/common/teteye";
-        greedy = true;
-      }
       "chatgpt"
       "ghostty@tip"
       "maccy"

@@ -80,6 +80,7 @@
           gitHunks
           glimpseui
           sleeve
+          teteye
           unfolder
           wb
           ;
@@ -107,6 +108,7 @@
           gitHunks
           glimpseui
           sleeve
+          teteye
           unfolder
           wb
           ;
