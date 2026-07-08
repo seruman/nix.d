@@ -69,6 +69,7 @@ in
     PAGER = "less";
     LESS = "-R --mouse";
     LIGHTPANDA_DISABLE_TELEMETRY = "true";
+    OP_BIOMETRIC_UNLOCK_ENABLED = "true";
     WB_UPDATE_CHECK = "off";
     WB_NO_UPDATE_CHECK = "1";
     WB_SKILL_AUTO_UPDATE = "off";
