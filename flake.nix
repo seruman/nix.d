@@ -19,9 +19,6 @@
     opnix.url = "github:brizzbuzz/opnix";
     opnix.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
-    pi.url = "github:lukasl-dev/pi.nix";
-    pi.inputs.nixpkgs.follows = "nixpkgs-unstable";
-
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
   };
 
@@ -79,6 +76,7 @@
           cloudflareCf
           gitHunks
           glimpseui
+          pi
           sleeve
           teteye
           unfolder
@@ -107,6 +105,7 @@
           cloudflareCf
           gitHunks
           glimpseui
+          pi
           sleeve
           teteye
           unfolder

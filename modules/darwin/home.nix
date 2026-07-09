@@ -25,13 +25,13 @@ let
     cloudflareCf
     gitHunks
     glimpseui
+    pi
     wb
     ;
 in
 {
   imports = [
     inputs.opnix.homeManagerModules.default
-    inputs.pi.homeModules.default
     ./home/fish.nix
     ./home/git.nix
     ./home/ghostty.nix
@@ -52,8 +52,6 @@ in
   # is what produces the "references the store path ... without a proper
   # context" warning on every build. Not used.
   manual.manpages.enable = false;
-
-  programs.pi.coding-agent.enable = true;
 
   xdg = {
     enable = true;
@@ -86,6 +84,7 @@ in
   home.packages = [
     pkgsUnstable._1password-cli
     pkgsUnstable.claude-code
+    pi
 
     bttf
     pkgsUnstable.biome

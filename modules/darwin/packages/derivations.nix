@@ -11,6 +11,64 @@
   # wrapper, which invalidates the application bundle signature.
   glide = inputs.glide.packages.${pkgs.stdenv.hostPlatform.system}.glide-browser-bin-unwrapped;
 
+  pi =
+    let
+      system = pkgs.stdenv.hostPlatform.system;
+      release =
+        {
+          aarch64-darwin = {
+            arch = "arm64";
+            hash = "sha256-v2HGScRzUVpfC2j7x32kDaHmTQBmJc6i2SbvPPEdPvE=";
+          };
+        }
+        .${system} or (throw "pi is only packaged for aarch64-darwin");
+      runtimeBins = lib.makeBinPath [
+        pkgsUnstable.bun
+        pkgsUnstable.git
+        pkgsUnstable.openssh
+        pkgsUnstable.ripgrep
+        pkgsUnstable.fd
+      ];
+    in
+    pkgs.stdenvNoCC.mkDerivation (finalAttrs: {
+      pname = "pi-coding-agent-bin";
+      version = "0.80.5";
+
+      src = pkgs.fetchurl {
+        url = "https://github.com/earendil-works/pi/releases/download/v${finalAttrs.version}/pi-darwin-${release.arch}.tar.gz";
+        hash = release.hash;
+      };
+
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      sourceRoot = ".";
+
+      unpackPhase = ''
+        runHook preUnpack
+        tar -xzf "$src"
+        runHook postUnpack
+      '';
+
+      installPhase = ''
+        runHook preInstall
+        mkdir -p "$out/lib" "$out/bin"
+        cp -R pi "$out/lib/pi"
+        chmod +x "$out/lib/pi/pi"
+        makeWrapper "$out/lib/pi/pi" "$out/bin/pi" \
+          --set PI_PACKAGE_DIR "$out/lib/pi" \
+          --prefix PATH : "${runtimeBins}"
+        runHook postInstall
+      '';
+
+      meta = {
+        description = "Pi terminal coding agent";
+        homepage = "https://pi.dev/";
+        license = lib.licenses.mit;
+        mainProgram = "pi";
+        platforms = [ "aarch64-darwin" ];
+        sourceProvenance = [ lib.sourceTypes.binaryNativeCode ];
+      };
+    });
+
   bttf = pkgs.stdenvNoCC.mkDerivation (finalAttrs: {
     pname = "bttf";
     version = "0.1.4";
