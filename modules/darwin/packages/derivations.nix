@@ -224,12 +224,12 @@
 
   teteye = pkgs.stdenvNoCC.mkDerivation {
     pname = "teteye";
-    version = "nightly-2026-07-08-7e9fbdc";
+    version = "nightly-2026-07-10-e0349b2";
 
     src = pkgs.fetchurl {
-      name = "teteye-nightly-2026-07-08-7e9fbdc.zip";
-      url = "https://api.github.com/repos/seruman/teteye/releases/assets/470686269";
-      hash = "sha256-tftgYobUGhdOdkWKGFLUFujwNcwKig3RCFnFJyhju7Y=";
+      name = "teteye-nightly-2026-07-10-e0349b2.zip";
+      url = "https://api.github.com/repos/seruman/teteye/releases/assets/472832103";
+      hash = "sha256-PiuAvhqqNtFK+SjYK4nK0/c+PeA3yNvvFbRG4J0fSio=";
       curlOptsList = [
         "-H"
         "Accept: application/octet-stream"
