@@ -1,6 +1,7 @@
 {
   pkgs,
   pkgsUnstable,
+  username,
   ...
 }:
 
@@ -37,6 +38,8 @@ in
     hostName = "dumpedcore";
     localHostName = "dumpedcore";
   };
+
+  home-manager.users.${username}.programs.teteye.enable = true;
 
   services.tailscale = {
     enable = true;

@@ -51,6 +51,7 @@
     in
     {
       darwinModules.common = ./modules/darwin/common.nix;
+      homeManagerModules.teteye = ./modules/home-manager/teteye.nix;
 
       darwinConfigurations.dumpedcore = nix-darwin.lib.darwinSystem {
         system = darwinSystem;
