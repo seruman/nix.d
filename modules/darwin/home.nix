@@ -36,6 +36,7 @@ in
     ./home/git.nix
     ./home/ghostty.nix
     ./home/ssh.nix
+    ./home/teteye.nix
   ];
 
   home.username = serumanDarwin.username;
@@ -343,7 +344,6 @@ in
     "glide/package.json".source = file "glide/package.json";
     "glide/tsconfig.json".source = file "glide/tsconfig.json";
     "glide/ui.glide.ts".source = file "glide/ui.glide.ts";
-    "teteye".source = file "teteye";
   };
 
 }
