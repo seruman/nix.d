@@ -31,6 +31,7 @@ in
     inputs.nix-homebrew.darwinModules.nix-homebrew
     ./homebrew
     ./packages
+    ./teteye.nix
   ];
 
   options.seruman.darwin = {
@@ -84,12 +85,6 @@ in
       hostPlatform = "aarch64-darwin";
       config.allowUnfree = true;
     };
-
-    system.activationScripts.postActivation.text = ''
-      if [ -d "/Applications/Nix Apps/teteye.app" ]; then
-        xattr -dr com.apple.quarantine "/Applications/Nix Apps/teteye.app" 2>/dev/null || true
-      fi
-    '';
 
     environment.variables = xdgEnvironment // {
       FORGIT_NO_ALIASES = "1";
