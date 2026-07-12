@@ -5,7 +5,7 @@ modules/darwin/files/glide/glide.d.ts
 modules/darwin/files/glide/glide.work.ts
 modules/darwin/files/glide/node_modules/
 
-.envrc*
+.envrc.local
 .direnv/
 .tmp-*/
 .tmp-*
