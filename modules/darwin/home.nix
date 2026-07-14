@@ -301,12 +301,29 @@ in
     ".npmrc".text = ''
       # Only install package versions published at least 7 days ago.
       min-release-age=7
+      # Supply-chain hardening: never run install lifecycle scripts.
+      # Re-enable per-project with `npm install --ignore-scripts=false`.
+      ignore-scripts=true
     '';
 
     ".bunfig.toml".text = ''
       [install]
       # Only install package versions published at least 7 days ago.
       minimumReleaseAge = 604800
+      # Supply-chain hardening: disable lifecycle scripts for all packages,
+      # including Bun's built-in trusted-dependencies allow-list. Re-enable
+      # per-project via `trustedDependencies` in that package.json.
+      ignoreScripts = true
+    '';
+
+    # Yarn Berry (v2+): block dependency build scripts globally.
+    ".yarnrc.yml".text = ''
+      enableScripts: false
+    '';
+
+    # Yarn Classic (v1): block lifecycle scripts globally.
+    ".yarnrc".text = ''
+      ignore-scripts true
     '';
 
     "Library/Keyboard Layouts/TurkishQLegacyFixed.keylayout" = {
