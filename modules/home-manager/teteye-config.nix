@@ -3,7 +3,9 @@
 {
   imports = [ ./teteye.nix ];
 
-  # Shared teteye configuration layered ahead of any host-specific fragments.
-  # Hosts can append their own files via `programs.teteye.configFiles` (mkAfter).
-  programs.teteye.configFiles = lib.mkBefore [ ./files/teteye/config.js ];
+  # Include config.js from within its store directory so its sibling
+  # teteye-js-env.d.ts (referenced via `/// <reference path="./..." />`)
+  # is copied alongside it; a bare file path would drop the sibling.
+  # mkBefore keeps this shared config ahead of any host-specific fragments.
+  programs.teteye.configFiles = lib.mkBefore [ "${./files/teteye}/config.js" ];
 }
