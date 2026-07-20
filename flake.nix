@@ -51,7 +51,7 @@
 
       teteyeConfigGenerationCheck =
         let
-          testFirst = ./modules/darwin/files/teteye/config.js;
+          testFirst = ./modules/home-manager/files/teteye/config.js;
           testMiddle = darwinPkgs.writeText "teteye-test-middle.js" "";
           testLast = darwinPkgs.writeText "teteye-test-last.js" "";
           testHome = inputs.home-manager.lib.homeManagerConfiguration {
@@ -110,6 +110,7 @@
     {
       darwinModules.common = ./modules/darwin/common.nix;
       homeManagerModules.teteye = ./modules/home-manager/teteye.nix;
+      homeManagerModules.teteye-config = ./modules/home-manager/teteye-config.nix;
 
       darwinConfigurations.dumpedcore = nix-darwin.lib.darwinSystem {
         system = darwinSystem;

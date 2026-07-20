@@ -36,7 +36,7 @@ in
     ./home/git.nix
     ./home/ghostty.nix
     ./home/ssh.nix
-    ./home/teteye.nix
+    ../home-manager/teteye-config.nix
   ];
 
   home.username = serumanDarwin.username;
