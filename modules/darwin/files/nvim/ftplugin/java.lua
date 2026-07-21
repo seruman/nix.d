@@ -24,8 +24,12 @@ local lombok_path = utils.find_lombok()
 local project_java_version = utils.detect_project_java_version(root_dir)
 local trusted_checksums = gradle.init()
 
+local nix_paths = utils.nix_paths()
+local jdtls_bin = (nix_paths and nix_paths.jdtls and vim.fn.executable(nix_paths.jdtls) == 1) and nix_paths.jdtls
+	or "jdtls"
+
 local cmd = {
-	"jdtls",
+	jdtls_bin,
 	"--java-executable",
 	java_bin,
 }

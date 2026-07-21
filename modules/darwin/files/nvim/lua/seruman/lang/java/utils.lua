@@ -1,5 +1,22 @@
 local M = {}
 
+-- Optional Nix-generated tool paths; falls back to env when absent.
+local nix_paths_loaded, nix_paths_cache = false, nil
+local function nix_paths()
+	if not nix_paths_loaded then
+		nix_paths_loaded = true
+		local path = vim.fn.expand("~/.config/nvim-nix/paths.lua")
+		if vim.fn.filereadable(path) == 1 then
+			local ok, result = pcall(dofile, path)
+			if ok and type(result) == "table" then
+				nix_paths_cache = result
+			end
+		end
+	end
+	return nix_paths_cache
+end
+M.nix_paths = nix_paths
+
 local function probe_java_major(java_home)
 	if not java_home or vim.fn.isdirectory(java_home) ~= 1 then
 		return nil
@@ -29,6 +46,11 @@ local function java_runtime_name(major)
 end
 
 function M.find_java_home()
+	local nix = nix_paths()
+	if nix and nix.java and vim.fn.isdirectory(nix.java) == 1 then
+		return nix.java
+	end
+
 	if vim.env.JAVA_HOME and vim.fn.isdirectory(vim.env.JAVA_HOME) == 1 then
 		return vim.env.JAVA_HOME
 	end
@@ -145,6 +167,11 @@ function M.setup_gradle_checksums(root_dir, trusted_checksums, save_checksums_fu
 end
 
 function M.find_lombok()
+	local nix = nix_paths()
+	if nix and nix.lombok and vim.fn.filereadable(nix.lombok) == 1 then
+		return nix.lombok
+	end
+
 	if vim.env.LOMBOK_JAR and vim.fn.filereadable(vim.env.LOMBOK_JAR) == 1 then
 		return vim.env.LOMBOK_JAR
 	end
@@ -161,6 +188,33 @@ end
 -- The default flag goes to the runtime whose major matches `project_java_version`
 -- if provided; otherwise to JAVA_HOME's runtime.
 function M.get_java_runtimes(java_home, project_java_version)
+	local nix = nix_paths()
+	if nix and type(nix.runtimes) == "table" and #nix.runtimes > 0 then
+		local declared = {}
+		local matched_default = false
+		for _, rt in ipairs(nix.runtimes) do
+			if rt.name and rt.path and vim.fn.isdirectory(rt.path) == 1 then
+				local major = tonumber((rt.name:match("JavaSE%-1%.(%d+)")) or (rt.name:match("JavaSE%-(%d+)")))
+				local is_default
+				if project_java_version ~= nil then
+					is_default = major == project_java_version
+				else
+					is_default = rt.default == true
+				end
+				if is_default then
+					matched_default = true
+				end
+				table.insert(declared, { name = rt.name, path = rt.path, default = is_default })
+			end
+		end
+		if #declared > 0 then
+			if not matched_default then
+				declared[1].default = true
+			end
+			return declared
+		end
+	end
+
 	local runtimes = {}
 	local seen = {}
 
