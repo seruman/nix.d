@@ -69,12 +69,21 @@ declare namespace Teteye {
     fontSize?: number;
     fontThicken?: boolean;
     fontFeatures?: readonly string[];
-    scrollbackLines?: number;
+    scrollback?: ScrollbackConfig;
     cursorStyle?: "block" | "bar" | "underline" | string;
     cursorBlink?: boolean;
     mouseHideWhileTyping?: boolean;
     /** Raw Ghostty link regexes with no Teteye action. Prefer teteye.links.add for handled links. */
     linkPatterns?: readonly string[];
+  }
+
+  interface ScrollbackConfig {
+    /** Non-negative JavaScript safe integer of uncompressed logical page bytes per surface, or "unlimited". Defaults to 50 MB. */
+    limitBytes?: number | "unlimited";
+    /** Non-negative JavaScript safe integer approximate line cap per surface, excluding the active screen, or "unlimited". Defaults to "unlimited". */
+    limitLines?: number | "unlimited";
+    /** Compress idle historical pages, typically reducing their resident memory by 70%-90%; savings vary by content. Defaults to true. */
+    compression?: boolean;
   }
 
   interface ColorsConfig {

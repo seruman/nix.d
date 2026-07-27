@@ -23,7 +23,11 @@ teteye.config({
     fontFamily: berkeleyMono,
     fontSize: 14,
     fontThicken: true,
-    scrollbackLines: 200000000,
+    scrollback: {
+      limitBytes: 200_000_000,
+      limitLines: 1_000_000,
+      compression: true,
+    },
   },
   colors: {
     background: "#F4F0ED",
