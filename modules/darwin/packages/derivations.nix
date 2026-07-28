@@ -18,7 +18,7 @@
         {
           aarch64-darwin = {
             arch = "arm64";
-            hash = "sha256-+c1+0g5Q4jTW8fJjSy43LtBz3DEHA4H5db220ai90ck=";
+            hash = "sha256-yltmDuDb8rQWn2l1PPYPTg7d3/SklCfN00Zg5BKAJJ8=";
           };
         }
         .${system} or (throw "pi is only packaged for aarch64-darwin");
@@ -32,7 +32,7 @@
     in
     pkgs.stdenvNoCC.mkDerivation (finalAttrs: {
       pname = "pi-coding-agent-bin";
-      version = "0.80.6";
+      version = "0.82.1";
 
       src = pkgs.fetchurl {
         url = "https://github.com/earendil-works/pi/releases/download/v${finalAttrs.version}/pi-darwin-${release.arch}.tar.gz";
