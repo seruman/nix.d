@@ -196,11 +196,11 @@
 
   sleeve = pkgs.stdenvNoCC.mkDerivation {
     pname = "sleeve";
-    version = "3.3";
+    version = "3.3.1";
 
     src = pkgs.fetchurl {
       url = "https://replay-sleeve-distribution.s3.amazonaws.com/latest/Sleeve.dmg";
-      hash = "sha256-8Rux0IgKJxj8Gw8wuyoUe/ytRFyhJFJG9Xxu5Xp/B+c=";
+      hash = "sha256-VncEqQxTA1ptMPGLVQDUGBul95O0UqXwRPOfR+nHxno=";
     };
 
     nativeBuildInputs = [ pkgs.undmg ];
