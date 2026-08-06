@@ -105,7 +105,7 @@
 
   gitHunks = pkgs.stdenvNoCC.mkDerivation {
     pname = "git-hunks";
-    version = "0-unstable-2024-11-13";
+    version = "1.0.0-unstable-2026-05-13";
 
     src = pkgs.fetchFromGitHub {
       owner = "rockorager";
