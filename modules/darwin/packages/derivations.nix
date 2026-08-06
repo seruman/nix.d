@@ -137,11 +137,11 @@
     in
     pkgs.stdenvNoCC.mkDerivation (finalAttrs: {
       pname = "cloudflare-cf";
-      version = "0.0.6";
+      version = "0.6.0";
 
       src = pkgs.fetchurl {
         url = "https://registry.npmjs.org/cf/-/cf-${finalAttrs.version}.tgz";
-        hash = "sha512-FUTEhDk1lfisq32cXeP+L2nl2eCrVaFQZ21vs+HGk78BnrbaUjtAvw5PbPH6qtWbkqbgjcpWI8sSzwSePU0cTQ==";
+        hash = "sha512-8Fn8HMteKoJEISxmdLBkkF+mnmIwRgYgvGyFbXZTCYYAmEJJDFRs1MAw0NQTxwkn+R3HtZbt1vnoEmeKT7rUEQ==";
       };
 
       sourceRoot = "package";
@@ -158,7 +158,7 @@
       '';
 
       meta = {
-        description = "Technical preview unified command-line interface for Cloudflare";
+        description = "Unified command-line interface for Cloudflare";
         homepage = "https://blog.cloudflare.com/cf-cli-local-explorer/";
         license = lib.licenses.mit;
         mainProgram = "cf";
