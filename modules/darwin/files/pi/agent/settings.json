@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.84.0",
+  "enableInstallTelemetry": false,
   "theme": "light",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-5.5",
