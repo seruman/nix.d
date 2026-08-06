@@ -5,12 +5,6 @@
     enable = true;
     enableFishIntegration = true;
     global.autoUpdate = false;
-    taps = [
-      "lightpanda-io/browser"
-    ];
-    brews = [
-      "lightpanda-io/browser/lightpanda"
-    ];
     casks = [
       "1password"
       "chatgpt"
