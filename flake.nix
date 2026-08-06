@@ -142,6 +142,7 @@
           unfolder
           wb
           ;
+        terminal-browser = localDarwinPackages.terminalBrowser;
       };
 
       devShells.${darwinSystem}.default = darwinPkgs.mkShellNoCC {
@@ -172,6 +173,7 @@
           unfolder
           wb
           ;
+        terminal-browser = self.packages.${darwinSystem}.terminal-browser;
       };
       checks.${linuxSystem}.nixos-build = self.nixosConfigurations.nixpi.config.system.build.toplevel;
     };

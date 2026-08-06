@@ -21,11 +21,13 @@ let
       ;
   };
   inherit (derivations)
+    agentBrowser
     bttf
     cloudflareCf
     gitHunks
     glimpseui
     pi
+    terminalBrowser
     wb
     ;
 in
@@ -121,7 +123,8 @@ in
     pkgsUnstable.ffmpeg
     pkgsUnstable.gh
     pkgsUnstable.ghq
-    pkgsUnstable.agent-browser
+    agentBrowser
+    terminalBrowser
     pkgsUnstable.cloudflared
     cloudflareCf
     gitHunks
