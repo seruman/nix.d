@@ -21,16 +21,21 @@ teteye.config({
     cursorBlink: false,
     cursorStyle: "block",
     fontFamily: berkeleyMono,
+    fontFeatures: ["-calt"],
     fontSize: 14,
     fontThicken: true,
+    mouseHideWhileTyping: false,
     scrollback: {
       limitBytes: 200_000_000,
       limitLines: 1_000_000,
       compression: true,
     },
+    underlineThickness: "-50%",
   },
   colors: {
     background: "#F4F0ED",
+    cursor: "cell-foreground",
+    cursorText: "cell-background",
     foreground: "#6B5C4D",
     palette: [
       "#867462",
@@ -52,16 +57,23 @@ teteye.config({
     ],
   },
   window: {
+    newTabPosition: "end",
     opacity: 1,
+    paddingColor: "background",
     paddingX: 10,
     quitAfterLastWindowClosed: true,
+    unfocusedSplitOpacity: 0.9,
   },
   clipboard: {
+    copyOnSelect: "clipboard",
     pasteBracketedSafe: true,
     pasteProtection: true,
     read: "ask",
     trimTrailingSpaces: true,
     write: "ask",
+  },
+  macos: {
+    optionAsAlt: "left",
   },
   shell: {
     integration: "fish",
@@ -106,6 +118,8 @@ teteye.keytable("prefix", { timeoutMs: 1500, timeoutAction: teteye.action.pop() 
   table.bind("c", teteye.action.newTab());
   table.bind("n", teteye.action.nextTab());
   table.bind("p", teteye.action.prevTab());
+  table.bind("ctrl+n", teteye.action.jumpToPrompt("next"));
+  table.bind("ctrl+p", teteye.action.jumpToPrompt("previous"));
   table.bind("1", teteye.action.gotoTab(0));
   table.bind("2", teteye.action.gotoTab(1));
   table.bind("3", teteye.action.gotoTab(2));
