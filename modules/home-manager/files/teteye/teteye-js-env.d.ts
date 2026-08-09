@@ -69,6 +69,8 @@ declare namespace Teteye {
     fontSize?: number;
     fontThicken?: boolean;
     fontFeatures?: readonly string[];
+    /** Signed 32-bit pixel adjustment or percentage adjustment relative to the font's underline thickness. */
+    underlineThickness?: number | `${number}%`;
     scrollback?: ScrollbackConfig;
     cursorStyle?: "block" | "bar" | "underline" | string;
     cursorBlink?: boolean;
@@ -90,7 +92,8 @@ declare namespace Teteye {
     theme?: string;
     foreground?: Color;
     background?: Color;
-    cursor?: Color;
+    cursor?: TerminalColor;
+    cursorText?: TerminalColor;
     selectionForeground?: Color;
     selectionBackground?: Color;
     /** Palette indexes 0-15. */
@@ -98,6 +101,7 @@ declare namespace Teteye {
   }
 
   type Color = `#${string}` | string;
+  type TerminalColor = Color | "cell-foreground" | "cell-background";
   type PaletteIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15;
 
   interface WindowConfig {
@@ -105,7 +109,12 @@ declare namespace Teteye {
     padding?: number;
     paddingX?: number;
     paddingY?: number;
+    paddingColor?: "background" | "extend" | "extend-always";
     opacity?: number;
+    /** Opacity of nonfocused panes in a split, clamped to Ghostty's 0.15 through 1 range. */
+    unfocusedSplitOpacity?: number;
+    /** Insert new tabs after the current tab or at the end of the native tab group. */
+    newTabPosition?: "current" | "end";
     inheritCwd?: boolean;
     quitAfterLastWindowClosed?: boolean;
   }
@@ -281,6 +290,7 @@ declare namespace Teteye {
     scroll(direction: "up" | "down" | string, amount?: "page" | "half-page" | number | string): KeyAction;
     search(): KeyAction;
     scrollbackEditor(): KeyAction;
+    jumpToPrompt(direction: "previous" | "next"): KeyAction;
     clearScreen(): KeyAction;
     reloadConfig(): KeyAction;
     sendText(text: string, options?: TargetOptions): KeyAction;
