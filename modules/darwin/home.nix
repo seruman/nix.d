@@ -29,6 +29,7 @@ let
     pi
     terminalBrowser
     wb
+    zigdoc
     ;
 in
 {
@@ -104,6 +105,7 @@ in
     pkgsUnstable.wasmer
     pkgsUnstable.wasmtime
     pkgsUnstable.zig
+    zigdoc
 
     pkgsUnstable.deadnix
     pkgsUnstable.nix-diff

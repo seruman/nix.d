@@ -137,6 +137,7 @@
           gitHunks
           glimpseui
           pi
+          zigdoc
           sleeve
           teteye
           unfolder
@@ -168,6 +169,7 @@
           gitHunks
           glimpseui
           pi
+          zigdoc
           sleeve
           teteye
           unfolder
