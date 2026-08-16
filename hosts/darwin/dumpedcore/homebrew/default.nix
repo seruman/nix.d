@@ -24,6 +24,7 @@
     masApps = {
       "Pixelmator Pro" = 1289583905;
       "GarageBand" = 682658836;
+      "Xcode" = 497799835;
       "Ivory for Mastodon by Tapbots" = 6444602274;
       "field-kit" = 1612653346;
     };
