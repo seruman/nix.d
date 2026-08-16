@@ -33,6 +33,8 @@
           else
             brew tap "$tap_name" "$tap_url"
           fi
+
+          brew trust --tap "$tap_name"
         ''}
     fi
   '';
