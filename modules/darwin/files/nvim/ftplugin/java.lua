@@ -23,6 +23,8 @@ local java_bin = java_home .. "/bin/java"
 local lombok_path = utils.find_lombok()
 local project_java_version = utils.detect_project_java_version(root_dir)
 local trusted_checksums = gradle.init()
+local java_runtimes = utils.get_java_runtimes(java_home, project_java_version)
+local gradle_java_home = utils.find_gradle_java_home(java_runtimes, project_java_version)
 
 local nix_paths = utils.nix_paths()
 local jdtls_bin = (nix_paths and nix_paths.jdtls and vim.fn.executable(nix_paths.jdtls) == 1) and nix_paths.jdtls
@@ -56,11 +58,24 @@ local config = {
 				},
 			},
 		},
+		-- JDTLS imports the Gradle project during initialize, before the
+		-- workspace/didChangeConfiguration that carries `settings`, so the Gradle JVM has
+		-- to be known here.
+		settings = {
+			java = {
+				import = { gradle = { java = { home = gradle_java_home } } },
+			},
+		},
 	},
 	settings = {
 		java = {
 			configuration = {
-				runtimes = utils.get_java_runtimes(java_home, project_java_version),
+				runtimes = utils.to_jdtls_runtimes(java_runtimes),
+			},
+			import = {
+				gradle = {
+					java = { home = gradle_java_home },
+				},
 			},
 			eclipse = { downloadSources = true },
 			maven = { downloadSources = true },

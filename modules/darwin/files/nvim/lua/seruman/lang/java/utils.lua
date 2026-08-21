@@ -178,43 +178,18 @@ function M.find_lombok()
 	return nil
 end
 
--- Build the JDTLS `runtimes` list from environment variables.
+-- Build the JDTLS `runtimes` list.
 --
--- Sources:
---   * JAVA_HOME — the active default JDK. Major version probed via `java -version`.
+-- Sources, in order:
+--   * nix_paths().runtimes — JDKs declared by the nix config, each with an explicit
+--     `major`.
+--   * JAVA_HOME — the active JDK, major probed via `java -version`.
 --   * JAVA_HOME_<major> (e.g. JAVA_HOME_11, JAVA_HOME_17) — additional JDKs.
---     The major version is read directly from the env var name.
 --
+-- Entries carry `major` for callers; strip it before sending them to JDTLS.
 -- The default flag goes to the runtime whose major matches `project_java_version`
--- if provided; otherwise to JAVA_HOME's runtime.
+-- if provided, otherwise to the first runtime declaring itself default.
 function M.get_java_runtimes(java_home, project_java_version)
-	local nix = nix_paths()
-	if nix and type(nix.runtimes) == "table" and #nix.runtimes > 0 then
-		local declared = {}
-		local matched_default = false
-		for _, rt in ipairs(nix.runtimes) do
-			if rt.name and rt.path and vim.fn.isdirectory(rt.path) == 1 then
-				local major = tonumber((rt.name:match("JavaSE%-1%.(%d+)")) or (rt.name:match("JavaSE%-(%d+)")))
-				local is_default
-				if project_java_version ~= nil then
-					is_default = major == project_java_version
-				else
-					is_default = rt.default == true
-				end
-				if is_default then
-					matched_default = true
-				end
-				table.insert(declared, { name = rt.name, path = rt.path, default = is_default })
-			end
-		end
-		if #declared > 0 then
-			if not matched_default then
-				declared[1].default = true
-			end
-			return declared
-		end
-	end
-
 	local runtimes = {}
 	local seen = {}
 
@@ -223,19 +198,27 @@ function M.get_java_runtimes(java_home, project_java_version)
 		if not name or not path or vim.fn.isdirectory(path) ~= 1 then
 			return
 		end
-		if seen[name] then
+		if seen[major] then
 			return
 		end
-		seen[name] = true
+		seen[major] = true
 		table.insert(runtimes, {
 			name = name,
+			major = major,
 			path = path,
 			default = (project_java_version ~= nil and major == project_java_version)
 				or (project_java_version == nil and is_active),
 		})
 	end
 
-	-- JAVA_HOME: the active default.
+	local nix = nix_paths()
+	if nix and type(nix.runtimes) == "table" then
+		for _, rt in ipairs(nix.runtimes) do
+			add(rt.major, rt.path, rt.default == true)
+		end
+	end
+
+	-- JAVA_HOME: the active JDK, which a project shell may have overridden.
 	local active_home = vim.env.JAVA_HOME
 	if active_home and vim.fn.isdirectory(active_home) == 1 then
 		add(probe_java_major(active_home), active_home, true)
@@ -253,18 +236,19 @@ function M.get_java_runtimes(java_home, project_java_version)
 		vim.notify("No Java runtimes found. JDTLS may not work properly.", vim.log.levels.WARN)
 		table.insert(runtimes, {
 			name = "JavaSE-17",
+			major = 17,
 			path = java_home,
 			default = true,
 		})
 	end
 
-	-- If nothing got marked default (e.g. project version provided but none matched),
-	-- fall back to the JAVA_HOME entry, then the first.
+	-- JDTLS accepts a single default, so keep the first one only.
 	local has_default = false
 	for _, rt in ipairs(runtimes) do
-		if rt.default then
+		if rt.default and has_default then
+			rt.default = false
+		elseif rt.default then
 			has_default = true
-			break
 		end
 	end
 	if not has_default then
@@ -272,6 +256,35 @@ function M.get_java_runtimes(java_home, project_java_version)
 	end
 
 	return runtimes
+end
+
+-- JDK the Gradle daemon should run on.
+--
+-- Gradle only auto-detects toolchains in well-known locations, so a build requesting
+-- a toolchain the daemon JVM does not provide fails to import with
+-- ToolchainDownloadFailedException. Running the daemon on the project's own JDK makes
+-- it a candidate. Returns nil when nothing matches, leaving JDTLS to pick.
+function M.find_gradle_java_home(runtimes, project_java_version)
+	if project_java_version == nil then
+		return nil
+	end
+
+	for _, rt in ipairs(runtimes) do
+		if rt.major == project_java_version then
+			return rt.path
+		end
+	end
+
+	return nil
+end
+
+-- JDTLS only knows name/path/default; drop the bookkeeping fields.
+function M.to_jdtls_runtimes(runtimes)
+	local out = {}
+	for _, rt in ipairs(runtimes) do
+		table.insert(out, { name = rt.name, path = rt.path, default = rt.default })
+	end
+	return out
 end
 
 return M
