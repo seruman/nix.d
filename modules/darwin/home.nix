@@ -347,6 +347,7 @@ in
     };
 
     "bin/git-histcopy".source = file "bin/git-histcopy";
+    "bin/picost".source = file "bin/picost";
     "bin/pils".source = file "bin/pils";
     "bin/tmux-cssh".source = file "bin/tmux-cssh";
   };

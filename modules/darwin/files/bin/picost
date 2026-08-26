@@ -1,0 +1,573 @@
+#!/usr/bin/env bun
+// vi: ft=typescript
+
+import { createWriteStream } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import {
+    migrateSessionEntries,
+    parseSessionEntries,
+    SessionManager,
+    type SessionEntry,
+    type SessionHeader,
+    type SessionInfo,
+} from "@earendil-works/pi-coding-agent";
+import type { Usage } from "@earendil-works/pi-ai";
+
+type Command =
+    | { kind: "report"; top: number; byDay: boolean }
+    | { kind: "export"; session?: string; output: string };
+
+type UsageTotals = Pick<Usage, "input" | "output" | "cacheRead" | "cacheWrite"> & {
+    costTotal: number;
+};
+
+type EventRow = {
+    sessionId: string;
+    sessionPath: string;
+    cwd: string;
+    sessionName: string;
+    parentSession: string;
+    entryId: string;
+    parentId: string;
+    turnId: string;
+    branchId: string;
+    ts: string;
+    entryType: "message" | "compaction" | "branch_summary";
+    role: "user" | "assistant" | "toolResult" | "";
+    provider: string;
+    model: string;
+    stopReason: string;
+    toolName: string;
+    isError: boolean | "";
+    toolsCalled: string;
+    inputTokens: number;
+    outputTokens: number;
+    cacheReadTokens: number;
+    cacheWriteTokens: number;
+    costInput: number;
+    costOutput: number;
+    costCacheRead: number;
+    costCacheWrite: number;
+    costTotal: number;
+    contextTokens: number | "";
+};
+
+type SessionAnalysis = {
+    info: SessionInfo;
+    date: string;
+    models: string[];
+    rows: EventRow[];
+    usage: UsageTotals;
+};
+
+type Rollup = {
+    key: string;
+    cost: number;
+    sessions: Set<string>;
+};
+
+const CSV_COLUMNS = [
+    ["session_id", "sessionId"],
+    ["session_path", "sessionPath"],
+    ["cwd", "cwd"],
+    ["session_name", "sessionName"],
+    ["parent_session", "parentSession"],
+    ["entry_id", "entryId"],
+    ["parent_id", "parentId"],
+    ["turn_id", "turnId"],
+    ["branch_id", "branchId"],
+    ["ts", "ts"],
+    ["entry_type", "entryType"],
+    ["role", "role"],
+    ["provider", "provider"],
+    ["model", "model"],
+    ["stop_reason", "stopReason"],
+    ["tool_name", "toolName"],
+    ["is_error", "isError"],
+    ["tools_called", "toolsCalled"],
+    ["input_tokens", "inputTokens"],
+    ["output_tokens", "outputTokens"],
+    ["cache_read_tokens", "cacheReadTokens"],
+    ["cache_write_tokens", "cacheWriteTokens"],
+    ["cost_input", "costInput"],
+    ["cost_output", "costOutput"],
+    ["cost_cache_read", "costCacheRead"],
+    ["cost_cache_write", "costCacheWrite"],
+    ["cost_total", "costTotal"],
+    ["context_tokens", "contextTokens"],
+] as const satisfies ReadonlyArray<readonly [string, keyof EventRow]>;
+
+await main();
+
+async function main(): Promise<void> {
+    let command: Command;
+    try {
+        command = parseArgs(process.argv.slice(2));
+    } catch (error) {
+        fail(errorMessage(error));
+    }
+
+    const sessionInfos = await discoverSessions(command).catch((error: unknown) => fail(errorMessage(error)));
+
+    if (command.kind === "report") {
+        const sessions: SessionAnalysis[] = [];
+        for await (const session of analyzeSessions(sessionInfos)) sessions.push(session);
+        if (sessions.length === 0) fail("no readable pi sessions found");
+        printReport(sessions, command);
+    } else {
+        const processed = await exportCsv(sessionInfos, command.output).catch((error: unknown) =>
+            fail(errorMessage(error)),
+        );
+        if (processed === 0) fail("no readable pi sessions found");
+    }
+}
+
+function parseArgs(args: string[]): Command {
+    if (args.length === 0 || args.includes("-h") || args.includes("--help")) {
+        printHelp();
+        process.exit(0);
+    }
+
+    const [subcommand, ...rest] = args;
+    if (subcommand !== "report" && subcommand !== "export") {
+        throw new Error(`expected 'report' or 'export', got '${subcommand}'`);
+    }
+
+    let session: string | undefined;
+    let output = "events.csv";
+    let outputSpecified = false;
+    let top = 20;
+    let topSpecified = false;
+    let byDay = false;
+
+    for (let index = 0; index < rest.length; index++) {
+        const arg = rest[index];
+        const nextValue = (option: string): string => {
+            const value = rest[++index];
+            if (!value) throw new Error(`${option} requires a value`);
+            return value;
+        };
+
+        if (arg === "--session") {
+            session = nextValue(arg);
+        } else if (arg === "-o" || arg === "--output") {
+            output = nextValue(arg);
+            outputSpecified = true;
+        } else if (arg === "--top") {
+            const value = nextValue(arg);
+            top = Number(value);
+            topSpecified = true;
+            if (!Number.isInteger(top) || top < 0) throw new Error("--top must be a non-negative integer");
+        } else if (arg === "--by") {
+            const value = nextValue(arg);
+            if (value !== "day") throw new Error("--by only supports 'day'");
+            byDay = true;
+        } else {
+            throw new Error(`unknown option: ${arg}`);
+        }
+    }
+
+    if (subcommand === "report") {
+        if (session) throw new Error("--session is only valid with export");
+        if (outputSpecified) throw new Error("-o/--output is only valid with export");
+        return { kind: "report", top, byDay };
+    }
+
+    if (byDay || topSpecified) throw new Error("--top and --by are only valid with report");
+    return { kind: "export", session, output };
+}
+
+function printHelp(): void {
+    console.log(`picost - analyze pi session costs
+
+Usage:
+  picost report [--top N] [--by day]
+  picost export [--session <path>] [-o events.csv]
+
+Options:
+  --top <N>         Number of sessions in report (default 20; 0 means all)
+  --by day          Include a daily rollup
+  --session <path>  Export one session
+  -o, --output      CSV destination (default events.csv; '-' means stdout)
+  -h, --help        Show this help
+
+Session storage is resolved by Pi's SessionManager.`);
+}
+
+async function discoverSessions(command: Command): Promise<SessionInfo[]> {
+    const sessions = await SessionManager.listAll();
+    if (command.kind !== "export" || !command.session) return sessions;
+
+    const session = sessions.find((info) => info.path === command.session);
+    if (!session) throw new Error(`session not found: ${command.session}`);
+    return [session];
+}
+
+async function* analyzeSessions(sessionInfos: SessionInfo[]): AsyncGenerator<SessionAnalysis> {
+    for (const info of sessionInfos) {
+        try {
+            yield await analyzeSession(info);
+        } catch (error) {
+            console.error(`picost: warning: ${info.path}: ${errorMessage(error)}`);
+        }
+    }
+}
+
+async function analyzeSession(info: SessionInfo): Promise<SessionAnalysis> {
+    const content = await readFile(info.path, "utf8");
+    const fileEntries = parseSessionEntries(content);
+    if (fileEntries.length === 0 || fileEntries[0].type !== "session") {
+        throw new Error("missing or invalid session header");
+    }
+
+    migrateSessionEntries(fileEntries);
+    const header = fileEntries[0] as SessionHeader;
+    const entries = fileEntries.slice(1) as SessionEntry[];
+    const branchIds = getBranchIds(entries);
+    const turnIds = getTurnIds(entries, info.id);
+    const rows: EventRow[] = [];
+
+    for (const entry of entries) {
+        const row = eventFromEntry(entry, info, turnIds, branchIds);
+        if (row) rows.push(row);
+    }
+
+    const usage = sumUsage(rows);
+    const models = Array.from(
+        new Set(rows.filter((row) => row.role === "assistant").map((row) => `${row.provider}/${row.model}`)),
+    ).filter((model) => model !== "/");
+    const firstTimestamp = rows.map((row) => row.ts).filter(Boolean).sort()[0] || normalizeTimestamp(header.timestamp);
+
+    return {
+        info,
+        date: firstTimestamp ? firstTimestamp.slice(0, 10) : "",
+        models,
+        rows,
+        usage,
+    };
+}
+
+function eventFromEntry(
+    entry: SessionEntry,
+    info: SessionInfo,
+    turnIds: Map<string, string>,
+    branchIds: Map<string, string>,
+): EventRow | undefined {
+    let role: EventRow["role"] = "";
+    let provider = "";
+    let model = "";
+    let stopReason = "";
+    let toolName = "";
+    let isError: boolean | "" = "";
+    let toolsCalled = "";
+    let usage: Usage | undefined;
+    let contextTokens: number | "" = "";
+
+    if (entry.type === "message") {
+        const message = entry.message;
+        if (message.role === "user") {
+            role = "user";
+        } else if (message.role === "assistant") {
+            role = "assistant";
+            provider = message.provider;
+            model = message.responseModel ?? message.model;
+            stopReason = message.stopReason;
+            usage = message.usage;
+            contextTokens = usage.input + usage.cacheRead + usage.cacheWrite;
+            toolsCalled = Array.isArray(message.content)
+                ? message.content
+                      .filter((block) => block.type === "toolCall")
+                      .map((block) => block.name)
+                      .join(";")
+                : "";
+        } else if (message.role === "toolResult") {
+            role = "toolResult";
+            toolName = message.toolName;
+            isError = message.isError;
+            usage = message.usage;
+        } else {
+            return undefined;
+        }
+    } else if (entry.type === "compaction" || entry.type === "branch_summary") {
+        usage = entry.usage;
+    } else {
+        return undefined;
+    }
+
+    return {
+        sessionId: info.id,
+        sessionPath: info.path,
+        cwd: info.cwd,
+        sessionName: info.name || "",
+        parentSession: info.parentSessionPath || "",
+        entryId: entry.id,
+        parentId: entry.parentId || "",
+        turnId: turnIds.get(entry.id) || info.id,
+        branchId: branchIds.get(entry.id) || entry.id,
+        ts: normalizeTimestamp(entry.timestamp),
+        entryType: entry.type,
+        role,
+        provider,
+        model,
+        stopReason,
+        toolName,
+        isError,
+        toolsCalled,
+        inputTokens: usage?.input ?? 0,
+        outputTokens: usage?.output ?? 0,
+        cacheReadTokens: usage?.cacheRead ?? 0,
+        cacheWriteTokens: usage?.cacheWrite ?? 0,
+        costInput: usage?.cost.input ?? 0,
+        costOutput: usage?.cost.output ?? 0,
+        costCacheRead: usage?.cost.cacheRead ?? 0,
+        costCacheWrite: usage?.cost.cacheWrite ?? 0,
+        costTotal: usage?.cost.total ?? 0,
+        contextTokens,
+    };
+}
+
+function getTurnIds(entries: SessionEntry[], sessionId: string): Map<string, string> {
+    const byId = new Map(entries.map((entry) => [entry.id, entry]));
+    const result = new Map<string, string>();
+
+    for (const entry of entries) {
+        if (result.has(entry.id)) continue;
+
+        const path: SessionEntry[] = [];
+        const seen = new Set<string>();
+        let current: SessionEntry | undefined = entry;
+        let turnId = sessionId;
+
+        while (current && !seen.has(current.id)) {
+            const knownTurnId = result.get(current.id);
+            if (knownTurnId) {
+                turnId = knownTurnId;
+                break;
+            }
+
+            path.push(current);
+            seen.add(current.id);
+            if (current.type === "message" && current.message.role === "user") {
+                turnId = current.id;
+                break;
+            }
+            current = current.parentId ? byId.get(current.parentId) : undefined;
+        }
+
+        for (const pathEntry of path) result.set(pathEntry.id, turnId);
+    }
+
+    return result;
+}
+
+function getBranchIds(entries: SessionEntry[]): Map<string, string> {
+    const byId = new Map(entries.map((entry) => [entry.id, entry]));
+    const children = new Map<string, SessionEntry[]>();
+    const roots: SessionEntry[] = [];
+
+    for (const entry of entries) {
+        if (!entry.parentId || !byId.has(entry.parentId)) {
+            roots.push(entry);
+            continue;
+        }
+        const siblings = children.get(entry.parentId) || [];
+        siblings.push(entry);
+        children.set(entry.parentId, siblings);
+    }
+
+    const result = new Map<string, string>();
+    for (const root of roots) {
+        const stack: Array<{ entry: SessionEntry; branchId: string }> = [{ entry: root, branchId: root.id }];
+        while (stack.length > 0) {
+            const current = stack.pop()!;
+            if (result.has(current.entry.id)) continue;
+            result.set(current.entry.id, current.branchId);
+            const descendants = children.get(current.entry.id) || [];
+            for (let index = descendants.length - 1; index >= 0; index--) {
+                const child = descendants[index];
+                stack.push({ entry: child, branchId: index === 0 ? current.branchId : child.id });
+            }
+        }
+    }
+    return result;
+}
+
+function sumUsage(rows: EventRow[]): UsageTotals {
+    const total = emptyUsageTotals();
+    for (const row of rows) {
+        addUsageTotals(total, {
+            input: row.inputTokens,
+            output: row.outputTokens,
+            cacheRead: row.cacheReadTokens,
+            cacheWrite: row.cacheWriteTokens,
+            costTotal: row.costTotal,
+        });
+    }
+    return total;
+}
+
+function normalizeTimestamp(value: unknown): string {
+    let date: Date;
+    if (typeof value === "number") {
+        date = new Date(value < 100_000_000_000 ? value * 1000 : value);
+    } else if (typeof value === "string" && /^\d+$/.test(value)) {
+        const numeric = Number(value);
+        date = new Date(numeric < 100_000_000_000 ? numeric * 1000 : numeric);
+    } else {
+        date = new Date(String(value));
+    }
+    return Number.isNaN(date.getTime()) ? "" : date.toISOString();
+}
+
+async function exportCsv(sessionInfos: SessionInfo[], output: string): Promise<number> {
+    let processed = 0;
+    async function* chunks(): AsyncGenerator<string> {
+        yield `${CSV_COLUMNS.map(([header]) => header).join(",")}\n`;
+        for await (const session of analyzeSessions(sessionInfos)) {
+            processed++;
+            for (const row of session.rows) {
+                yield `${CSV_COLUMNS.map(([, key]) => csvCell(row[key])).join(",")}\n`;
+            }
+        }
+    }
+
+    const destination = output === "-" ? process.stdout : createWriteStream(output, { encoding: "utf8" });
+    await pipeline(Readable.from(chunks()), destination, { end: output !== "-" });
+    return processed;
+}
+
+function csvCell(value: EventRow[keyof EventRow]): string {
+    const text = String(value);
+    return /[",\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+function printReport(sessions: SessionAnalysis[], command: Extract<Command, { kind: "report" }>): void {
+    const sorted = [...sessions].sort((a, b) => b.usage.costTotal - a.usage.costTotal);
+    const shown = command.top === 0 ? sorted : sorted.slice(0, command.top);
+
+    console.log("Sessions");
+    printTable(
+        ["Cost", "Date", "Cwd", "Id", "Name", "Input", "Output", "Cache read", "Cache write", "Model(s)"],
+        shown.map((session) => [
+            money(session.usage.costTotal),
+            session.date,
+            session.info.cwd,
+            session.info.id,
+            session.info.name || "",
+            humanTokens(session.usage.input),
+            humanTokens(session.usage.output),
+            humanTokens(session.usage.cacheRead),
+            humanTokens(session.usage.cacheWrite),
+            session.models.join(", "),
+        ]),
+        new Set([0, 5, 6, 7, 8]),
+    );
+
+    printRollup("By cwd", "Cwd", rollupSessions(sessions, (session) => session.info.cwd));
+    printRollup("By model", "Model", rollupModels(sessions));
+    if (command.byDay) printRollup("By day", "Day", rollupSessions(sessions, (session) => session.date));
+
+    const total = sumSessionUsage(sessions);
+    console.log("\nGrand total");
+    console.log(
+        `${money(total.costTotal)}  ${sessions.length} sessions  input ${humanTokens(total.input)}  output ${humanTokens(total.output)}  cache read ${humanTokens(total.cacheRead)}  cache write ${humanTokens(total.cacheWrite)}`,
+    );
+}
+
+function rollupSessions(sessions: SessionAnalysis[], keyFor: (session: SessionAnalysis) => string): Rollup[] {
+    const groups = new Map<string, Rollup>();
+    for (const session of sessions) {
+        const key = keyFor(session);
+        const group = groups.get(key) || { key, cost: 0, sessions: new Set<string>() };
+        group.cost += session.usage.costTotal;
+        group.sessions.add(session.info.id);
+        groups.set(key, group);
+    }
+    return [...groups.values()].sort((a, b) => b.cost - a.cost || a.key.localeCompare(b.key));
+}
+
+function rollupModels(sessions: SessionAnalysis[]): Rollup[] {
+    const groups = new Map<string, Rollup>();
+    for (const session of sessions) {
+        for (const row of session.rows) {
+            const tokens = row.inputTokens + row.outputTokens + row.cacheReadTokens + row.cacheWriteTokens;
+            if (row.costTotal === 0 && tokens === 0) continue;
+            const key = row.role === "assistant" ? `${row.provider}/${row.model}` : "Tools/summaries";
+            const group = groups.get(key) || { key, cost: 0, sessions: new Set<string>() };
+            group.cost += row.costTotal;
+            group.sessions.add(session.info.id);
+            groups.set(key, group);
+        }
+    }
+    return [...groups.values()].sort((a, b) => b.cost - a.cost || a.key.localeCompare(b.key));
+}
+
+function printRollup(title: string, keyHeader: string, rollups: Rollup[]): void {
+    console.log(`\n${title}`);
+    printTable(
+        ["Cost", "Sessions", keyHeader],
+        rollups.map((rollup) => [money(rollup.cost), String(rollup.sessions.size), rollup.key]),
+        new Set([0, 1]),
+    );
+}
+
+function sumSessionUsage(sessions: SessionAnalysis[]): UsageTotals {
+    const total = emptyUsageTotals();
+    for (const session of sessions) addUsageTotals(total, session.usage);
+    return total;
+}
+
+function emptyUsageTotals(): UsageTotals {
+    return { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, costTotal: 0 };
+}
+
+function addUsageTotals(target: UsageTotals, usage: UsageTotals): void {
+    target.input += usage.input;
+    target.output += usage.output;
+    target.cacheRead += usage.cacheRead;
+    target.cacheWrite += usage.cacheWrite;
+    target.costTotal += usage.costTotal;
+}
+
+function printTable(headers: string[], rows: string[][], rightAligned: Set<number>): void {
+    const widths = headers.map((header, index) =>
+        Math.max(header.length, ...rows.map((row) => (row[index] || "").length)),
+    );
+    const render = (row: string[]) =>
+        row
+            .map((cell, index) =>
+                rightAligned.has(index) ? cell.padStart(widths[index]) : cell.padEnd(widths[index]),
+            )
+            .join("  ")
+            .trimEnd();
+    console.log(render(headers));
+    console.log(widths.map((width) => "-".repeat(width)).join("  "));
+    for (const row of rows) console.log(render(row));
+}
+
+function money(value: number): string {
+    return `$${value.toFixed(2)}`;
+}
+
+function humanTokens(value: number): string {
+    const units = [
+        { size: 1_000_000_000, suffix: "B" },
+        { size: 1_000_000, suffix: "M" },
+        { size: 1_000, suffix: "K" },
+    ];
+    for (const unit of units) {
+        if (Math.abs(value) >= unit.size) return `${(value / unit.size).toFixed(1)}${unit.suffix}`;
+    }
+    return String(value);
+}
+
+function errorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+}
+
+function fail(message: string): never {
+    console.error(`picost: ${message}`);
+    process.exit(1);
+}
