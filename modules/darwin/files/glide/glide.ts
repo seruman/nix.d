@@ -131,20 +131,31 @@ glide.keymaps.set("normal", "R", "reload_hard", { description: "Reload the page,
 glide.keymaps.set(
 	"normal",
 	"d",
-	async ({ tab_id }) => {
-		const tab = await browser.tabs.get(tab_id);
+	(() => {
+		const closing = new Set<number>();
 
-		if (tab.pinned) {
-			browser.notifications.create({
-				type: "basic",
-				title: "Glide",
-				message: "Cannot close a pinned tab",
-			});
-			return;
-		}
+		return async ({ tab_id }) => {
+			if (closing.has(tab_id)) return;
+			closing.add(tab_id);
 
-		await glide.excmds.execute("tab_close");
-	},
+			try {
+				const tab = await browser.tabs.get(tab_id);
+
+				if (tab.pinned) {
+					await browser.notifications.create({
+						type: "basic",
+						title: "Glide",
+						message: "Cannot close a pinned tab",
+					});
+					return;
+				}
+
+				await browser.tabs.remove(tab_id);
+			} finally {
+				closing.delete(tab_id);
+			}
+		};
+	})(),
 	{ description: "Close current tab, unless it's pinned" },
 );
 
