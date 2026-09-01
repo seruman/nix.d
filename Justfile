@@ -6,6 +6,7 @@ rebuild := "/run/current-system/sw/bin/darwin-rebuild"
 nixpi := env_var_or_default("NIXPI_HOST", "nixpi")
 nixpi-repo := env_var_or_default("NIXPI_REPO", "~/etc/nix")
 keepy-bin := "/var/lib/keepy/bin/keep"
+sleeve-feed := "https://replay-sleeve-distribution.s3.amazonaws.com/changelog.xml"
 local-package-checks := ".#checks.aarch64-darwin.bttf .#checks.aarch64-darwin.cloudflareCf .#checks.aarch64-darwin.gitHunks .#checks.aarch64-darwin.glimpseui .#checks.aarch64-darwin.sleeve .#checks.aarch64-darwin.terminal-browser .#checks.aarch64-darwin.teteye .#checks.aarch64-darwin.teteye-config-generation .#checks.aarch64-darwin.unfolder .#checks.aarch64-darwin.wb .#checks.aarch64-darwin.zigdoc"
 
 _default:
@@ -41,6 +42,9 @@ update:
 
 brew-cleanup:
     brew cleanup --prune=all -s
+
+sleeve-versions:
+    curl -fsSL {{ sleeve-feed }} | sed -nE 's@.*<enclosure url="([^"]+)".*sparkle:version="([^"]+)".*sparkle:shortVersionString="([^"]+)".*@\3\t\2\t\1@p' | { printf 'VERSION\tBUILD\tURL\n'; cat; } | column -t -s $'\t'
 
 current:
     readlink /run/current-system

@@ -235,7 +235,7 @@ in
     version = "3.3.1";
 
     src = pkgs.fetchurl {
-      url = "https://replay-sleeve-distribution.s3.amazonaws.com/latest/Sleeve.dmg";
+      url = "https://replay-sleeve-distribution.s3.amazonaws.com/120/Sleeve.dmg";
       hash = "sha256-VncEqQxTA1ptMPGLVQDUGBul95O0UqXwRPOfR+nHxno=";
     };
 
