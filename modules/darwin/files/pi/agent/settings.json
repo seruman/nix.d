@@ -2,7 +2,7 @@
   "enableInstallTelemetry": false,
   "theme": "light",
   "defaultProvider": "openai-codex",
-  "defaultModel": "gpt-5.5",
+  "defaultModel": "gpt-5.6-sol",
   "defaultThinkingLevel": "high",
   "packages": ["git:github.com/seruman/pi-things", "npm:@plannotator/pi-extension"],
   "npmCommand": ["bun"],
