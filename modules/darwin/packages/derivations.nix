@@ -64,6 +64,8 @@ in
         chmod +x "$out/lib/pi/pi"
         makeWrapper "$out/lib/pi/pi" "$out/bin/pi" \
           --set PI_PACKAGE_DIR "$out/lib/pi" \
+          --set-default PI_SKIP_VERSION_CHECK 1 \
+          --set-default PI_TELEMETRY 0 \
           --prefix PATH : "${runtimeBins}"
         runHook postInstall
       '';
