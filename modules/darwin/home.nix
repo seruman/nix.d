@@ -232,6 +232,10 @@ in
   programs.direnv = {
     enable = true;
     package = pkgsUnstable.direnv;
+    nix-direnv = {
+      enable = true;
+      package = pkgsUnstable.nix-direnv;
+    };
     enableFishIntegration = true;
     stdlib = lib.mkBefore (builtins.readFile (file "direnv/direnvrc"));
   };
