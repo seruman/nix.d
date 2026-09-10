@@ -23,6 +23,7 @@ let
   inherit (derivations)
     agentBrowser
     bttf
+    claudeCode
     cloudflareCf
     gitHunks
     glimpseui
@@ -87,7 +88,7 @@ in
 
   home.packages = [
     pkgsUnstable._1password-cli
-    pkgsUnstable.claude-code
+    claudeCode
     pi
 
     bttf
