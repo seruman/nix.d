@@ -31,6 +31,8 @@
 
       feature.manyFiles = true;
 
+      gwt.root = "~/tmp/worktrees";
+
       ghq = {
         vsc = "git";
         root = "~/src";
