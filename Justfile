@@ -5,7 +5,6 @@ system := ".#darwinConfigurations.dumpedcore.system"
 rebuild := "/run/current-system/sw/bin/darwin-rebuild"
 nixpi := env_var_or_default("NIXPI_HOST", "nixpi")
 nixpi-repo := env_var_or_default("NIXPI_REPO", "~/etc/nix")
-keepy-bin := "/var/lib/keepy/bin/keep"
 sleeve-feed := "https://replay-sleeve-distribution.s3.amazonaws.com/changelog.xml"
 local-package-checks := ".#checks.aarch64-darwin.bttf .#checks.aarch64-darwin.cloudflareCf .#checks.aarch64-darwin.gitHunks .#checks.aarch64-darwin.glimpseui .#checks.aarch64-darwin.sleeve .#checks.aarch64-darwin.terminal-browser .#checks.aarch64-darwin.teteye .#checks.aarch64-darwin.teteye-config-generation .#checks.aarch64-darwin.unfolder .#checks.aarch64-darwin.wb .#checks.aarch64-darwin.zigdoc"
 
@@ -57,7 +56,3 @@ nixpi-logf service:
 
 nixpi-status service:
     ssh {{ nixpi }} 'sudo systemctl status {{ service }} --no-pager'
-
-nixpi-install-keepy localbin:
-    scp {{ localbin }} {{ nixpi }}:/tmp/keep
-    ssh {{ nixpi }} 'sudo install -o keepy -g keepy -m 0755 /tmp/keep {{ keepy-bin }} && rm -f /tmp/keep && sudo systemctl restart keepy.service'

@@ -4,50 +4,7 @@ let
   user = "seruman";
   interface = "wlan0";
   secretsDir = "/var/lib/nixos/secrets";
-  keepyUser = "keepy";
-  keepyGroup = "keepy";
-  keepyDataDir = "/var/lib/keepy";
-  keepyBinDir = "${keepyDataDir}/bin";
-  keepySecretsDir = "${keepyDataDir}/secrets";
-  unstable = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system};
-  opnix = inputs.opnix.packages.${pkgs.system}.default;
-  keepyGitHubTokenSecretRef = "op://Homelab/keepy-github-token/password";
-  keepyXCookiesSecretRef = "op://Homelab/keepy-x-cookies/password";
-  keepyCloudflaredTunnelTokenSecretRef = "op://Homelab/keepy-cloudflared-tunnel-token/password";
   nixRepoDeployKeyPath = "/home/${user}/.ssh/nix-d-deploy-key";
-  keepyOpnixConfig = pkgs.writeText "keepy-opnix.json" ''
-    {
-      "secrets": [
-        {
-          "path": "${keepySecretsDir}/github-token",
-          "reference": "${keepyGitHubTokenSecretRef}",
-          "owner": "${keepyUser}",
-          "group": "${keepyGroup}",
-          "mode": "0400"
-        },
-        {
-          "path": "${keepySecretsDir}/x-web-cookies.json",
-          "reference": "${keepyXCookiesSecretRef}",
-          "owner": "${keepyUser}",
-          "group": "${keepyGroup}",
-          "mode": "0400"
-        },
-        {
-          "path": "${keepySecretsDir}/cloudflared-tunnel-token",
-          "reference": "${keepyCloudflaredTunnelTokenSecretRef}",
-          "owner": "root",
-          "group": "root",
-          "mode": "0400"
-        }
-      ]
-    }
-  '';
-  keepyExec = pkgs.writeShellScript "keepy-start" ''
-    set -eu
-    export KEEP_GITHUB_TOKEN="$(cat "$CREDENTIALS_DIRECTORY/github-token")"
-    export KEEP_X_WEB_COOKIES_PATH="$CREDENTIALS_DIRECTORY/x-web-cookies.json"
-    exec ${keepyBinDir}/keep
-  '';
 in
 {
   imports = [ ./hardware-configuration.nix ];
@@ -97,8 +54,6 @@ in
     ripgrep
     tailscale
     tmux
-    opnix
-    unstable.cloudflared
   ];
 
   services = {
@@ -156,21 +111,9 @@ in
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIvzzGm2fRRXrn2n3i1VMe2qNxj1YHD0m/v06JryRtF3"
       ];
     };
-    users.${keepyUser} = {
-      isSystemUser = true;
-      group = keepyGroup;
-      home = keepyDataDir;
-      createHome = true;
-    };
-    groups.${keepyGroup} = { };
   };
 
-  systemd.tmpfiles.rules = [
-    "d /home/${user}/.ssh 0700 ${user} users -"
-    "d ${keepyDataDir} 0750 ${keepyUser} ${keepyGroup} -"
-    "d ${keepyBinDir} 0755 ${keepyUser} ${keepyGroup} -"
-    "d ${keepySecretsDir} 0750 ${keepyUser} ${keepyGroup} -"
-  ];
+  systemd.tmpfiles.rules = [ "d /home/${user}/.ssh 0700 ${user} users -" ];
 
   systemd.services.wifi-power-save-off = {
     description = "Disable wlan0 Wi-Fi power save";
@@ -189,106 +132,6 @@ in
       User = "root";
       Group = "root";
       ExecStart = "${pkgs.iw}/bin/iw dev ${interface} set power_save off";
-    };
-  };
-
-  systemd.services.keepy-secrets = {
-    description = "keepy runtime secrets via OpNix";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "network-online.target" ];
-    wants = [ "network-online.target" ];
-
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      Restart = "on-failure";
-      RestartSec = "15min";
-      User = "root";
-      Group = "root";
-    };
-
-    script = ''
-      install -d -m 0750 -o ${keepyUser} -g ${keepyGroup} ${keepySecretsDir}
-      if [ ! -s ${secretsDir}/opnix-token ]; then
-        echo "missing or empty OpNix token: ${secretsDir}/opnix-token" >&2
-        exit 1
-      fi
-      ${opnix}/bin/opnix secret \
-        -token-file ${secretsDir}/opnix-token \
-        -config ${keepyOpnixConfig} \
-        -output /
-    '';
-  };
-
-  systemd.services.keepy = {
-    description = "keepy bookmark server";
-    wantedBy = [ "multi-user.target" ];
-    after = [
-      "network-online.target"
-      "keepy-secrets.service"
-    ];
-    wants = [
-      "network-online.target"
-      "keepy-secrets.service"
-    ];
-
-    serviceConfig = {
-      Type = "simple";
-      User = keepyUser;
-      Group = keepyGroup;
-      WorkingDirectory = keepyDataDir;
-      ExecStart = "${keepyExec}";
-      Restart = "on-failure";
-      RestartSec = "5s";
-      LoadCredential = [
-        "github-token:${keepySecretsDir}/github-token"
-        "x-web-cookies.json:${keepySecretsDir}/x-web-cookies.json"
-      ];
-      StateDirectory = "keepy";
-      RuntimeDirectory = "keepy";
-      RuntimeDirectoryMode = "0750";
-      NoNewPrivileges = true;
-      PrivateTmp = true;
-      ProtectSystem = "strict";
-      ProtectHome = true;
-      ReadWritePaths = [ keepyDataDir ];
-    };
-
-    environment = {
-      KEEP_LISTEN_ADDR = "127.0.0.1:8080";
-      KEEP_DATABASE_PATH = "${keepyDataDir}/keep.db";
-      KEEP_LOG_LEVEL = "info";
-    };
-  };
-
-  systemd.services.cloudflared-keepy = {
-    description = "Cloudflare Tunnel connector for keepy";
-    wantedBy = [ "multi-user.target" ];
-    after = [
-      "network-online.target"
-      "keepy-secrets.service"
-    ];
-    wants = [
-      "network-online.target"
-      "keepy-secrets.service"
-    ];
-
-    serviceConfig = {
-      Type = "simple";
-      ExecStart = "${unstable.cloudflared}/bin/cloudflared tunnel --no-autoupdate run --token-file %d/tunnel-token";
-      Restart = "on-failure";
-      RestartSec = "5s";
-      LoadCredential = [
-        "tunnel-token:${keepySecretsDir}/cloudflared-tunnel-token"
-      ];
-      StateDirectory = "cloudflared";
-      RuntimeDirectory = "cloudflared";
-      RuntimeDirectoryMode = "0750";
-      DynamicUser = true;
-      NoNewPrivileges = true;
-      PrivateTmp = true;
-      ProtectSystem = "strict";
-      ProtectHome = true;
     };
   };
 
