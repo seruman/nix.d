@@ -32,6 +32,7 @@
       feature.manyFiles = true;
 
       gwt.root = "~/tmp/worktrees";
+      memo.root = "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/segfault/git-memo";
 
       ghq = {
         vsc = "git";
