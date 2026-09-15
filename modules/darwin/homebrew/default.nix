@@ -9,6 +9,7 @@
       "1password"
       "chatgpt"
       "ghostty@tip"
+      "helium-browser"
       "maccy"
       "mimestream"
       "monodraw"
