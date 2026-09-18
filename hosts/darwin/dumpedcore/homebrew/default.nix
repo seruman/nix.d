@@ -18,7 +18,6 @@
       "seruman/dumpedcore/epson-software-updater"
       "affinity"
       "mullvad-browser"
-      "mullvad-vpn"
       "prusaslicer"
     ];
     masApps = {
