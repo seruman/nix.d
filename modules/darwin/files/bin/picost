@@ -26,6 +26,12 @@ type UsageTotals = Pick<Usage, "input" | "output" | "cacheRead" | "cacheWrite"> 
 type EventRow = {
     sessionId: string;
     sessionPath: string;
+    sessionStartedAt: string;
+    isInherited: boolean;
+    isDuplicate: boolean;
+    eventCopyCount: number;
+    originSessionId: string;
+    originSessionPath: string;
     cwd: string;
     sessionName: string;
     parentSession: string;
@@ -71,6 +77,12 @@ type Rollup = {
 const CSV_COLUMNS = [
     ["session_id", "sessionId"],
     ["session_path", "sessionPath"],
+    ["session_started_at", "sessionStartedAt"],
+    ["is_inherited", "isInherited"],
+    ["is_duplicate", "isDuplicate"],
+    ["event_copy_count", "eventCopyCount"],
+    ["origin_session_id", "originSessionId"],
+    ["origin_session_path", "originSessionPath"],
     ["cwd", "cwd"],
     ["session_name", "sessionName"],
     ["parent_session", "parentSession"],
@@ -115,6 +127,7 @@ async function main(): Promise<void> {
         const sessions: SessionAnalysis[] = [];
         for await (const session of analyzeSessions(sessionInfos)) sessions.push(session);
         if (sessions.length === 0) fail("no readable pi sessions found");
+        annotateEventCopies(sessions);
         printReport(sessions, command);
     } else {
         const processed = await exportCsv(sessionInfos, command.output).catch((error: unknown) =>
@@ -224,21 +237,28 @@ async function analyzeSession(info: SessionInfo): Promise<SessionAnalysis> {
 
     migrateSessionEntries(fileEntries);
     const header = fileEntries[0] as SessionHeader;
+    const sessionStartedAt = normalizeTimestamp(header.timestamp);
     const entries = fileEntries.slice(1) as SessionEntry[];
     const branchIds = getBranchIds(entries);
     const turnIds = getTurnIds(entries, info.id);
     const rows: EventRow[] = [];
 
     for (const entry of entries) {
-        const row = eventFromEntry(entry, info, turnIds, branchIds);
+        const row = eventFromEntry(entry, info, sessionStartedAt, turnIds, branchIds);
         if (row) rows.push(row);
     }
 
-    const usage = sumUsage(rows);
+    // Forked session files contain the selected history from their parent. Those
+    // entries retain their original IDs, timestamps, usage, and cost; counting
+    // every row therefore bills the copied history again. Entries created before
+    // this session's header timestamp are inherited, not new provider calls.
+    const ownRows = rows.filter((row) => !row.isInherited);
+    const usage = sumUsage(ownRows);
     const models = Array.from(
-        new Set(rows.filter((row) => row.role === "assistant").map((row) => `${row.provider}/${row.model}`)),
+        new Set(ownRows.filter((row) => row.role === "assistant").map((row) => `${row.provider}/${row.model}`)),
     ).filter((model) => model !== "/");
-    const firstTimestamp = rows.map((row) => row.ts).filter(Boolean).sort()[0] || normalizeTimestamp(header.timestamp);
+    const firstTimestamp =
+        sessionStartedAt || ownRows.map((row) => row.ts).filter(Boolean).sort()[0] || rows.map((row) => row.ts).filter(Boolean).sort()[0];
 
     return {
         info,
@@ -249,9 +269,71 @@ async function analyzeSession(info: SessionInfo): Promise<SessionAnalysis> {
     };
 }
 
+function annotateEventCopies(sessions: SessionAnalysis[]): void {
+    const copiesByEvent = new Map<string, EventRow[]>();
+
+    for (const session of sessions) {
+        for (const row of session.rows) {
+            const key = eventIdentity(row);
+            const copies = copiesByEvent.get(key) || [];
+            copies.push(row);
+            copiesByEvent.set(key, copies);
+        }
+    }
+
+    for (const copies of copiesByEvent.values()) {
+        copies.sort(
+            (a, b) =>
+                Number(a.isInherited) - Number(b.isInherited) ||
+                a.sessionStartedAt.localeCompare(b.sessionStartedAt) ||
+                a.sessionPath.localeCompare(b.sessionPath),
+        );
+        const origin = copies[0];
+        for (const [index, row] of copies.entries()) {
+            row.isDuplicate = index > 0;
+            row.eventCopyCount = copies.length;
+            row.originSessionId = origin.sessionId;
+            row.originSessionPath = origin.sessionPath;
+        }
+    }
+
+    for (const session of sessions) {
+        const ownRows = session.rows.filter((row) => !row.isInherited && !row.isDuplicate);
+        session.usage = sumUsage(ownRows);
+        session.models = Array.from(
+            new Set(ownRows.filter((row) => row.role === "assistant").map((row) => `${row.provider}/${row.model}`)),
+        ).filter((model) => model !== "/");
+    }
+}
+
+function eventIdentity(row: EventRow): string {
+    return JSON.stringify([
+        row.entryId,
+        row.ts,
+        row.entryType,
+        row.role,
+        row.provider,
+        row.model,
+        row.stopReason,
+        row.toolName,
+        row.isError,
+        row.inputTokens,
+        row.outputTokens,
+        row.cacheReadTokens,
+        row.cacheWriteTokens,
+        row.costInput,
+        row.costOutput,
+        row.costCacheRead,
+        row.costCacheWrite,
+        row.costTotal,
+        row.contextTokens,
+    ]);
+}
+
 function eventFromEntry(
     entry: SessionEntry,
     info: SessionInfo,
+    sessionStartedAt: string,
     turnIds: Map<string, string>,
     branchIds: Map<string, string>,
 ): EventRow | undefined {
@@ -296,9 +378,17 @@ function eventFromEntry(
         return undefined;
     }
 
+    const ts = normalizeTimestamp(entry.timestamp);
+
     return {
         sessionId: info.id,
         sessionPath: info.path,
+        sessionStartedAt,
+        isInherited: Boolean(ts && sessionStartedAt && ts < sessionStartedAt),
+        isDuplicate: false,
+        eventCopyCount: 1,
+        originSessionId: info.id,
+        originSessionPath: info.path,
         cwd: info.cwd,
         sessionName: info.name || "",
         parentSession: info.parentSessionPath || "",
@@ -306,7 +396,7 @@ function eventFromEntry(
         parentId: entry.parentId || "",
         turnId: turnIds.get(entry.id) || info.id,
         branchId: branchIds.get(entry.id) || entry.id,
-        ts: normalizeTimestamp(entry.timestamp),
+        ts,
         entryType: entry.type,
         role,
         provider,
@@ -422,11 +512,13 @@ function normalizeTimestamp(value: unknown): string {
 }
 
 async function exportCsv(sessionInfos: SessionInfo[], output: string): Promise<number> {
-    let processed = 0;
+    const sessions: SessionAnalysis[] = [];
+    for await (const session of analyzeSessions(sessionInfos)) sessions.push(session);
+    annotateEventCopies(sessions);
+
     async function* chunks(): AsyncGenerator<string> {
         yield `${CSV_COLUMNS.map(([header]) => header).join(",")}\n`;
-        for await (const session of analyzeSessions(sessionInfos)) {
-            processed++;
+        for (const session of sessions) {
             for (const row of session.rows) {
                 yield `${CSV_COLUMNS.map(([, key]) => csvCell(row[key])).join(",")}\n`;
             }
@@ -435,7 +527,7 @@ async function exportCsv(sessionInfos: SessionInfo[], output: string): Promise<n
 
     const destination = output === "-" ? process.stdout : createWriteStream(output, { encoding: "utf8" });
     await pipeline(Readable.from(chunks()), destination, { end: output !== "-" });
-    return processed;
+    return sessions.length;
 }
 
 function csvCell(value: EventRow[keyof EventRow]): string {
@@ -470,9 +562,19 @@ function printReport(sessions: SessionAnalysis[], command: Extract<Command, { ki
     if (command.byDay) printRollup("By day", "Day", rollupSessions(sessions, (session) => session.date));
 
     const total = sumSessionUsage(sessions);
-    console.log("\nGrand total");
+    const excludedRows = sessions.flatMap((session) =>
+        session.rows.filter((row) => row.isInherited || row.isDuplicate),
+    );
+    const inheritedRows = excludedRows.filter((row) => row.isInherited).length;
+    const duplicateOwnRows = excludedRows.filter((row) => !row.isInherited && row.isDuplicate).length;
+    const excludedCost = excludedRows.reduce((sum, row) => sum + row.costTotal, 0);
+
+    console.log("\nGrand total (excluding copied event history)");
     console.log(
         `${money(total.costTotal)}  ${sessions.length} sessions  input ${humanTokens(total.input)}  output ${humanTokens(total.output)}  cache read ${humanTokens(total.cacheRead)}  cache write ${humanTokens(total.cacheWrite)}`,
+    );
+    console.log(
+        `Excluded ${inheritedRows} inherited rows and ${duplicateOwnRows} duplicate-file rows carrying ${money(excludedCost)} of copied historical cost.`,
     );
 }
 
@@ -492,6 +594,7 @@ function rollupModels(sessions: SessionAnalysis[]): Rollup[] {
     const groups = new Map<string, Rollup>();
     for (const session of sessions) {
         for (const row of session.rows) {
+            if (row.isInherited || row.isDuplicate) continue;
             const tokens = row.inputTokens + row.outputTokens + row.cacheReadTokens + row.cacheWriteTokens;
             if (row.costTotal === 0 && tokens === 0) continue;
             const key = row.role === "assistant" ? `${row.provider}/${row.model}` : "Tools/summaries";
