@@ -28,6 +28,7 @@ return {
 				"taplo",
 				"html",
 				"biome",
+				"oxfmt",
 				"sourcekit",
 			})
 

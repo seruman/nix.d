@@ -24,6 +24,9 @@ return {
 				java = { "palantir_java_format" },
 			},
 			formatters = {
+				biome = { require_cwd = true },
+				prettier = { require_cwd = true },
+				prettierd = { require_cwd = true },
 				goimports = {
 					prepend_args = function(_, _)
 						local local_ = table.concat({
