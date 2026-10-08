@@ -94,6 +94,24 @@ in
       HOMEBREW_NO_ENV_HINTS = "1";
     };
 
+    # nix-darwin replaces PATH during Fish preinit. Preserve terminal-provided
+    # entries (e.g. Rex's CLI) without changing the configured command priority.
+    # Save/merge technique: https://www.d12frosted.io/posts/2021-05-21-path-in-fish-with-nix-darwin
+    environment.etc."fish/nixos-env-preinit.fish".text = lib.mkMerge [
+      (lib.mkBefore ''
+        set -l __inherited_path $PATH
+      '')
+      (lib.mkAfter ''
+        # Fish normalizes empty PATH entries to "."; do not restore cwd lookups.
+        for entry in $__inherited_path
+          if test -n "$entry"; and test "$entry" != .; and not contains -- "$entry" $PATH
+            set -gx --append PATH "$entry"
+          end
+        end
+        set -e __inherited_path
+      '')
+    ];
+
     # Seed the user launchd environment so GUI-launched apps/terminals
     # inherit the same XDG base dirs before any shell startup files run.
     launchd.user.envVariables = xdgEnvironment;
