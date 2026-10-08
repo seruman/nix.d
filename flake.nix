@@ -136,6 +136,7 @@
           cloudflareCf
           gitHunks
           glimpseui
+          ollama
           pi
           zigdoc
           sleeve
@@ -168,6 +169,7 @@
           cloudflareCf
           gitHunks
           glimpseui
+          ollama
           pi
           zigdoc
           sleeve
