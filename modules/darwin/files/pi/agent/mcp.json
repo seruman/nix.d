@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "tweety": {
+      "command": "tweety",
+      "args": ["--mcp"],
+      "exposure": "codemode",
+      "description": "Search and read posts, threads, timelines, and bookmarks on X (formerly known as Twitter)."
+    }
+  }
+}

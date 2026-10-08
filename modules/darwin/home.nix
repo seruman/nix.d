@@ -347,6 +347,11 @@ in
       force = true;
     };
 
+    ".pi/agent/mcp.json" = {
+      source = file "pi/agent/mcp.json";
+      force = true;
+    };
+
     ".pi/agent/APPEND_SYSTEM.md" = {
       source = file "pi/agent/APPEND_SYSTEM.md";
       force = true;
