@@ -38,6 +38,8 @@ in
   # wrapper, which invalidates the application bundle signature.
   glide = inputs.glide.packages.${pkgs.stdenv.hostPlatform.system}.glide-browser-bin-unwrapped;
 
+  rexTerminfo = pkgs.callPackage ./rex-terminfo { };
+
   pi =
     let
       system = pkgs.stdenv.hostPlatform.system;
