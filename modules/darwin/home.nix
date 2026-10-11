@@ -361,6 +361,8 @@ in
     "bin/git-histcopy".source = file "bin/git-histcopy";
     "bin/picost".source = file "bin/picost";
     "bin/pils".source = file "bin/pils";
+    "bin/sudo-password".source = file "bin/sudo-password";
+    "bin/sudo-askpass-tty".source = file "bin/sudo-askpass-tty";
     "bin/tmux-cssh".source = file "bin/tmux-cssh";
   };
 

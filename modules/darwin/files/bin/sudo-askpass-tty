@@ -1,0 +1,16 @@
+#!/bin/bash
+# Read from the controlling terminal, never the command's stdin.
+set +x
+exec 3<>/dev/tty || exit 1
+terminal_settings=$(/bin/stty -g <&3) || exit 1
+trap '/bin/stty "$terminal_settings" <&3' EXIT
+trap 'printf "\n" >&3; exit 130' INT
+trap 'printf "\n" >&3; exit 143' TERM HUP
+printf '%s' "${1:-sudo password: }" >&3
+if IFS= read -r -s password <&3; then
+    printf '\n' >&3
+    printf '%s\n' "$password"
+else
+    printf '\n' >&3
+    exit 1
+fi
