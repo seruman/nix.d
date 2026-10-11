@@ -9,7 +9,8 @@ rex.bind("prefix/o", "session.switch")
 rex.bind("prefix/x", "client.close")
 rex.action({
 	name = "detach_block",
-	title = "Detach Block (Keep Running)",
+	title = "Detach Block",
+	description = "Detach the pane without stopping its process",
 	run = function(ctx)
 		if not ctx.block_id then return end
 		local _, err = rex.session.detach_block({ block_id = ctx.block_id })
@@ -17,6 +18,14 @@ rex.action({
 	end,
 })
 rex.bind("prefix/d", "detach_block")
+rex.action({
+	name = "attach_block",
+	title = "Attach Block",
+	description = "Attach a detached block in a split or new tab",
+	keywords = "attach reattach recover split tab",
+	args = { selected_block_id = "string?", placement = "string?" },
+	run = require("restore"),
+})
 rex.bind("prefix/z", "pane.zoom")
 rex.bind("prefix/h", "pane.focus", { direction = "left" })
 rex.bind("prefix/j", "pane.focus", { direction = "down" })
