@@ -7,6 +7,16 @@ rex.bind("prefix/\\", "pane.split", { direction = "right" })
 rex.bind("prefix/-", "pane.split", { direction = "down" })
 rex.bind("prefix/o", "session.switch")
 rex.bind("prefix/x", "client.close")
+rex.action({
+	name = "detach_block",
+	title = "Detach Block (Keep Running)",
+	run = function(ctx)
+		if not ctx.block_id then return end
+		local _, err = rex.session.detach_block({ block_id = ctx.block_id })
+		if err then error(err, 0) end
+	end,
+})
+rex.bind("prefix/d", "detach_block")
 rex.bind("prefix/z", "pane.zoom")
 rex.bind("prefix/h", "pane.focus", { direction = "left" })
 rex.bind("prefix/j", "pane.focus", { direction = "down" })
