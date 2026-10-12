@@ -7,12 +7,10 @@ function ghqf --wraps ghq --description 'Fuzzy find and navigate ghq repositorie
         --preview '_ghqf_preview {}' \
         --query "$argv"
 
-    if test "$TERM_PROGRAM" = ghostty; and command -q boo
-        set header 'Enter: cd | ctrl-v: vertical split | ctrl-s: horizontal split | ctrl-t: new tab'
+    if test "$TERM_PROGRAM" = rex; and command -q rex
+        set header 'Enter: cd | ctrl-t: new project tab'
         set fzf_args $fzf_args \
-            --bind 'ctrl-v:execute-silent(_ghqf_action right {})+abort' \
-            --bind 'ctrl-s:execute-silent(_ghqf_action down {})+abort' \
-            --bind 'ctrl-t:execute-silent(_ghqf_action tab {})+abort'
+            --bind 'ctrl-t:execute(_ghqf_action {})+abort'
     end
 
     set -l selection (ghq list | fzf $fzf_args --header "$header")

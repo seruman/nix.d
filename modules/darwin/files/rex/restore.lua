@@ -1,9 +1,4 @@
-local function must(result, err)
-	if err then
-		error(err, 0)
-	end
-	return result
-end
+local must = require("utils").must
 
 local function quote(value)
 	return "'" .. value:gsub("'", "'\\''") .. "'"

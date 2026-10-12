@@ -26,6 +26,13 @@ rex.action({
 	args = { selected_block_id = "string?", placement = "string?" },
 	run = require("restore"),
 })
+rex.action({
+	name = "project_tab",
+	title = "Open Project Tab",
+	description = "Open a fresh shell tab in a repository’s session",
+	args = { cwd = "string", label = "string" },
+	run = require("project"),
+})
 rex.bind("prefix/z", "pane.zoom")
 rex.bind("prefix/h", "pane.focus", { direction = "left" })
 rex.bind("prefix/j", "pane.focus", { direction = "down" })
