@@ -123,11 +123,12 @@ return function(ctx, args)
 		.. " selected_block_id={1} placement="
 
 	-- Rex preview renderer workaround: bounds render as edges but the PTY
-	-- sizes them as extents. Reserve the clipped area with fzf margins.
-	local w, h = math.min(120 / cols, 0.9), math.min(32 / rows_count, 0.9)
+	-- sizes them as extents. Reserve the clipped area with cell margins;
+	-- fzf rejects percentage margins above 49% on larger windows.
+	local w, h = math.min(200 / cols, 0.9), math.min(26 / rows_count, 0.9)
 	local x, y = (1 - w) / 2, (1 - h) / 2
-	local right = math.ceil((x + 1 / cols) / (x + w) * 100)
-	local bottom = math.ceil((y + 1 / rows_count) / (y + h) * 100)
+	local right = math.ceil(x * cols) + 1
+	local bottom = math.ceil(y * rows_count) + 1
 	local command = {
 		"/usr/bin/env",
 		"FZF_DEFAULT_COMMAND=printf '%s\\n' " .. table.concat(rows, " "),
@@ -135,7 +136,7 @@ return function(ctx, args)
 		"FZF_DEFAULT_OPTS_FILE=/dev/null",
 		"fzf",
 		"--layout=reverse",
-		string.format("--margin=0,%d%%,%d%%,0", right, bottom),
+		string.format("--margin=0,%d,%d,0", right, bottom),
 		"--border=rounded",
 		"--border-label= Attach Block ",
 		"--color=bg:#ece9e4,bg+:#dce7eb,fg:#6b5c4d,fg+:#6b5c4d,header:#443a31:bold",
