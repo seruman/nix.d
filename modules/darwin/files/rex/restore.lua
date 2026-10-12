@@ -143,17 +143,15 @@ return function(ctx, args)
 		"--delimiter=\t",
 		"--with-nth=2..",
 		"--prompt=Attach > ",
-		"--header=Enter / Ctrl-L: right\nCtrl-H: left  Ctrl-J: below\nCtrl-K: above Ctrl-T: new tab\nEsc: cancel  Ctrl-/: preview",
+		"--header=Enter / Ctrl-V: vertical split\nCtrl-S: horizontal split\nCtrl-T: new tab  Esc: cancel\nCtrl-/: preview  Ctrl-W: wrap",
 		"--preview=rex capture -s " .. quote(session) .. " -b {1} --format=vt --trim",
 		"--preview-window=right,55%,nowrap,follow",
 		"--bind=ctrl-/:toggle-preview,ctrl-w:toggle-preview-wrap",
 	}
 	for _, binding in ipairs({
 		{ "enter", "right" },
-		{ "ctrl-l", "right" },
-		{ "ctrl-h", "left" },
-		{ "ctrl-j", "below" },
-		{ "ctrl-k", "above" },
+		{ "ctrl-v", "right" },
+		{ "ctrl-s", "below" },
 		{ "ctrl-t", "tab" },
 	}) do
 		table.insert(command, "--bind=" .. binding[1] .. ":execute-silent(" .. callback .. binding[2] .. ")+abort")
