@@ -1,23 +1,11 @@
 {
-  inputs,
   lib,
-  pkgs,
-  pkgsUnstable,
+  localPackages,
   ...
 }:
 
-let
-  derivations = import ./packages/derivations.nix {
-    inherit
-      inputs
-      lib
-      pkgs
-      pkgsUnstable
-      ;
-  };
-in
 {
-  environment.systemPackages = [ derivations.teteye ];
+  environment.systemPackages = [ localPackages.teteye ];
 
   system.activationScripts.postActivation.text = lib.mkAfter ''
     if [ -d "/Applications/Nix Apps/teteye.app" ]; then

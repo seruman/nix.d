@@ -1,21 +1,10 @@
 {
-  lib,
+  localPackages,
   pkgs,
   pkgsUnstable,
-  inputs,
   ...
 }:
 
-let
-  derivations = import ./derivations.nix {
-    inherit
-      lib
-      pkgs
-      pkgsUnstable
-      inputs
-      ;
-  };
-in
 {
   programs._1password = {
     enable = true;
@@ -23,9 +12,9 @@ in
   };
 
   environment.systemPackages = [
-    derivations.glide
-    derivations.sleeve
-    derivations.rexTerminfo
+    localPackages.glide
+    localPackages.sleeve
+    localPackages.rex-terminfo
   ];
 
   environment.shells = [ pkgs.fish ];

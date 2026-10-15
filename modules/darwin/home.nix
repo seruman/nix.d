@@ -2,7 +2,7 @@
   config,
   inputs,
   lib,
-  pkgs,
+  localPackages,
   serumanDarwin,
   turkishKeyboardLayout,
   pkgsUnstable,
@@ -11,27 +11,6 @@
 
 let
   file = relativePath: "${serumanDarwin.filesRoot}/${relativePath}";
-
-  derivations = import ./packages/derivations.nix {
-    inherit
-      inputs
-      lib
-      pkgs
-      pkgsUnstable
-      ;
-  };
-  inherit (derivations)
-    agentBrowser
-    bttf
-    claudeCode
-    cloudflareCf
-    gitHunks
-    glimpseui
-    pi
-    terminalBrowser
-    wb
-    zigdoc
-    ;
 in
 {
   imports = [
@@ -90,10 +69,10 @@ in
 
   home.packages = [
     pkgsUnstable._1password-cli
-    claudeCode
-    pi
+    localPackages.claude-code
+    localPackages.pi
 
-    bttf
+    localPackages.bttf
     pkgsUnstable.biome
     pkgsUnstable.bun
     pkgsUnstable.go
@@ -108,7 +87,7 @@ in
     pkgsUnstable.wasmer
     pkgsUnstable.wasmtime
     pkgsUnstable.zig
-    zigdoc
+    localPackages.zigdoc
 
     pkgsUnstable.deadnix
     pkgsUnstable.nix-diff
@@ -128,13 +107,13 @@ in
     pkgsUnstable.ffmpeg
     pkgsUnstable.gh
     pkgsUnstable.ghq
-    agentBrowser
-    terminalBrowser
+    localPackages.agent-browser
+    localPackages.terminal-browser
     pkgsUnstable.cloudflared
-    cloudflareCf
-    gitHunks
-    wb
-    glimpseui
+    localPackages.cloudflare-cf
+    localPackages.git-hunks
+    localPackages.wb
+    localPackages.glimpseui
     pkgsUnstable.git-filter-repo
     pkgsUnstable.glow
     pkgsUnstable.gnumake

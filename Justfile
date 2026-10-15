@@ -6,7 +6,6 @@ rebuild := "/run/current-system/sw/bin/darwin-rebuild"
 nixpi := env_var_or_default("NIXPI_HOST", "nixpi")
 nixpi-repo := env_var_or_default("NIXPI_REPO", "~/etc/nix")
 sleeve-feed := "https://replay-sleeve-distribution.s3.amazonaws.com/changelog.xml"
-local-package-checks := ".#checks.aarch64-darwin.bttf .#checks.aarch64-darwin.cloudflareCf .#checks.aarch64-darwin.gitHunks .#checks.aarch64-darwin.glimpseui .#checks.aarch64-darwin.gridcraft .#checks.aarch64-darwin.ollama .#checks.aarch64-darwin.sleeve .#checks.aarch64-darwin.terminal-browser .#checks.aarch64-darwin.teteye .#checks.aarch64-darwin.teteye-config-generation .#checks.aarch64-darwin.unfolder .#checks.aarch64-darwin.wb .#checks.aarch64-darwin.zigdoc"
 
 _default:
     just --list
@@ -27,8 +26,7 @@ check:
     nix shell --inputs-from . nixpkgs-unstable#statix -c statix check .
     fish -n $(git ls-files '*.fish')
     fish_indent --check $(git ls-files '*.fish')
-    nix build {{ local-package-checks }} --no-link --print-out-paths
-    nix build {{ system }} --no-link --print-out-paths
+    nix build --no-link --print-out-paths $(nix eval --raw .#checks.aarch64-darwin --apply 'checks: builtins.concatStringsSep " " (map (name: ".#checks.aarch64-darwin.${name}") (builtins.attrNames checks))')
     nix eval .#nixosConfigurations.nixpi.config.system.build.toplevel.drvPath
 
 fmt:

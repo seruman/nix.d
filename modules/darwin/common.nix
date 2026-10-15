@@ -9,6 +9,9 @@
 
 let
   cfg = config.seruman.darwin;
+  localPackages = import ../../packages {
+    inherit pkgs pkgsUnstable inputs;
+  };
 
   turkishKeyboardLayout = pkgs.fetchFromGitHub {
     owner = "seruman";
@@ -30,7 +33,7 @@ in
     inputs.home-manager.darwinModules.home-manager
     inputs.nix-homebrew.darwinModules.nix-homebrew
     ./homebrew
-    ./packages
+    ./packages.nix
     ./teteye.nix
   ];
 
@@ -69,7 +72,7 @@ in
 
   config = {
     _module.args = {
-      inherit pkgsUnstable;
+      inherit pkgsUnstable localPackages;
       username = cfg.username;
       homeDirectory = cfg.homeDirectory;
       screenshotsDirectory = cfg.screenshotsDirectory;
@@ -178,7 +181,12 @@ in
       useGlobalPkgs = true;
       useUserPackages = true;
       extraSpecialArgs = {
-        inherit inputs pkgsUnstable turkishKeyboardLayout;
+        inherit
+          inputs
+          pkgsUnstable
+          turkishKeyboardLayout
+          localPackages
+          ;
         serumanDarwin = cfg;
       };
       users.${cfg.username} = import ./home.nix;

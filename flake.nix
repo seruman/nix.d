@@ -42,70 +42,6 @@
         system = darwinSystem;
         config.allowUnfree = true;
       };
-      localDarwinPackages = import ./modules/darwin/packages/derivations.nix {
-        lib = darwinPkgs.lib;
-        pkgs = darwinPkgs;
-        pkgsUnstable = darwinPkgsUnstable;
-        inherit inputs;
-      };
-
-      teteyeConfigGenerationCheck =
-        let
-          testFirst = ./modules/home-manager/files/teteye/config.js;
-          testMiddle = darwinPkgs.writeText "teteye-test-middle.js" "";
-          testLast = darwinPkgs.writeText "teteye-test-last.js" "";
-          testHome = inputs.home-manager.lib.homeManagerConfiguration {
-            pkgs = darwinPkgs;
-            modules = [
-              ./modules/home-manager/teteye.nix
-              (
-                { lib, ... }:
-                {
-                  programs.teteye.configFiles = lib.mkBefore [ testFirst ];
-                }
-              )
-              {
-                home = {
-                  username = "tester";
-                  homeDirectory = "/Users/tester";
-                  stateVersion = "26.05";
-                };
-                programs.teteye = {
-                  enable = true;
-                  configFiles = [ testMiddle ];
-                };
-              }
-              (
-                { lib, ... }:
-                {
-                  programs.teteye.configFiles = lib.mkAfter [ testLast ];
-                }
-              )
-            ];
-          };
-          generatedConfig = testHome.config.xdg.configFile."teteye/config.js".text;
-          sourceContext = builtins.getContext (builtins.toJSON testFirst);
-          generatedContext = builtins.getContext generatedConfig;
-          sourceReferencesPreserved = builtins.all (path: builtins.hasAttr path generatedContext) (
-            builtins.attrNames sourceContext
-          );
-          actualConfig =
-            assert sourceReferencesPreserved;
-            darwinPkgs.writeText "teteye-test-config.js" generatedConfig;
-          expectedConfig = darwinPkgs.writeText "teteye-test-config-expected.js" (
-            "teteye.include(${builtins.toJSON testFirst});\n"
-            + "teteye.include(${builtins.toJSON testMiddle});\n"
-            + "teteye.include(${builtins.toJSON testLast});\n"
-          );
-        in
-        darwinPkgs.runCommand "teteye-config-generation-check" { } ''
-          diff -u ${expectedConfig} ${actualConfig}
-          test "$(grep -Ec '^teteye\.include\("/nix/store/[^\"]+"\);$' ${actualConfig})" -eq 3
-          test -f ${testFirst}
-          test -f ${testMiddle}
-          test -f ${testLast}
-          touch "$out"
-        '';
     in
     {
       darwinModules.common = ./modules/darwin/common.nix;
@@ -130,22 +66,10 @@
         modules = [ ./hosts/nixos/nixpi ];
       };
 
-      packages.${darwinSystem} = {
-        inherit (localDarwinPackages)
-          bttf
-          cloudflareCf
-          gitHunks
-          glimpseui
-          gridcraft
-          ollama
-          pi
-          zigdoc
-          sleeve
-          teteye
-          unfolder
-          wb
-          ;
-        terminal-browser = localDarwinPackages.terminalBrowser;
+      packages.${darwinSystem} = import ./packages {
+        pkgs = darwinPkgs;
+        pkgsUnstable = darwinPkgsUnstable;
+        inherit inputs;
       };
 
       devShells.${darwinSystem}.default = darwinPkgs.mkShellNoCC {
@@ -162,24 +86,11 @@
       formatter.${darwinSystem} = nixpkgs.legacyPackages.${darwinSystem}.nixfmt;
       formatter.${linuxSystem} = nixpkgs-nixos.legacyPackages.${linuxSystem}.nixfmt;
 
-      checks.${darwinSystem} = {
+      checks.${darwinSystem} = self.packages.${darwinSystem} // {
         darwin-build = self.darwinConfigurations.dumpedcore.system;
-        teteye-config-generation = teteyeConfigGenerationCheck;
-        inherit (self.packages.${darwinSystem})
-          bttf
-          cloudflareCf
-          gitHunks
-          glimpseui
-          gridcraft
-          ollama
-          pi
-          zigdoc
-          sleeve
-          teteye
-          unfolder
-          wb
-          ;
-        terminal-browser = self.packages.${darwinSystem}.terminal-browser;
+        teteye-config-generation = darwinPkgs.callPackage ./checks/teteye-config-generation.nix {
+          inherit (inputs) home-manager;
+        };
       };
       checks.${linuxSystem}.nixos-build = self.nixosConfigurations.nixpi.config.system.build.toplevel;
     };

@@ -1,21 +1,12 @@
 {
   config,
-  inputs,
   lib,
+  localPackages,
   pkgs,
-  pkgsUnstable,
   ...
 }:
 
 let
-  derivations = import ../packages/derivations.nix {
-    inherit
-      inputs
-      lib
-      pkgs
-      pkgsUnstable
-      ;
-  };
   dataDir = "${config.xdg.dataHome}/ollama";
   stateDir = "${config.xdg.stateHome}/ollama";
   logFile = "${stateDir}/server.log";
@@ -75,7 +66,7 @@ let
     # launchd supervises the exec'd server, not the fallible preload helper.
     # Its default process-group cleanup also stops the helper on server exit.
     ${preload} &
-    exec ${lib.getExe derivations.ollama} serve
+    exec ${lib.getExe localPackages.ollama} serve
   '';
   rotation = pkgs.writeText "ollama-logrotate.conf" ''
     "${logFile}" {
@@ -93,7 +84,7 @@ in
 {
   services.ollama = {
     enable = true;
-    package = derivations.ollama;
+    package = localPackages.ollama;
     host = "127.0.0.1";
     port = 11434;
     environmentVariables = {
