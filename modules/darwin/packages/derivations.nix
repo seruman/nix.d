@@ -38,6 +38,8 @@ in
   # wrapper, which invalidates the application bundle signature.
   glide = inputs.glide.packages.${pkgs.stdenv.hostPlatform.system}.glide-browser-bin-unwrapped;
 
+  gridcraft = pkgs.callPackage ./gridcraft.nix { };
+
   rexTerminfo = pkgs.callPackage ./rex-terminfo { };
 
   pi =

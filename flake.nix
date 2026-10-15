@@ -136,6 +136,7 @@
           cloudflareCf
           gitHunks
           glimpseui
+          gridcraft
           ollama
           pi
           zigdoc
@@ -169,6 +170,7 @@
           cloudflareCf
           gitHunks
           glimpseui
+          gridcraft
           ollama
           pi
           zigdoc

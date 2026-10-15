@@ -18,7 +18,10 @@ let
   };
 in
 {
-  environment.systemPackages = [ derivations.unfolder ];
+  environment.systemPackages = [
+    derivations.gridcraft
+    derivations.unfolder
+  ];
 
   home-manager.users.${username}.home.packages = [
     pkgsUnstable.yt-dlp
