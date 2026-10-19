@@ -8,6 +8,18 @@ local function cell(value)
 	return (value or ""):gsub("[%c]", " ")
 end
 
+local function block_rect(node, block_id)
+	if not node then
+		return nil
+	end
+	if node.block_id == block_id then
+		return node.rect
+	end
+	if node.split then
+		return block_rect(node.split.before, block_id) or block_rect(node.split.after, block_id)
+	end
+end
+
 local placements = {
 	right = { direction = "horizontal", side = "after" },
 	left = { direction = "horizontal", side = "before" },
@@ -92,19 +104,18 @@ return function(ctx, args)
 	for _, window in ipairs(view.windows or {}) do
 		for _, layer in ipairs(window.layers or {}) do
 			if layer.kind == "tiled" then
-				for _, block in ipairs(layer.blocks or {}) do
-					if block.block_id == ctx.block_id then
-						window_id, rect = window.window_id, block.rect
-					end
+				local found = block_rect(layer.layout, ctx.block_id)
+				if found then
+					window_id, rect = window.window_id, found
 				end
 			end
 		end
 	end
-	if not rect or rect.w <= 0 or rect.h <= 0 then
+	if not rect or rect[3] <= 0 or rect[4] <= 0 then
 		error("Launch the picker from a tiled pane", 0)
 	end
 	local size = must(rex.call("block.method", { session_id = session, block_id = ctx.block_id, method = "size" }))
-	local cols, rows_count = size.columns / rect.w, size.rows / rect.h
+	local cols, rows_count = size.columns / rect[3], size.rows / rect[4]
 	if cols <= 0 or rows_count <= 0 then
 		error("Cannot determine the window size", 0)
 	end
