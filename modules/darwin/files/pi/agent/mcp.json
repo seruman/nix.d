@@ -1,5 +1,10 @@
 {
   "mcpServers": {
+    "radius": {
+      "url": "https://radius.pi.dev/mcp",
+      "auth": { "provider": "radius" },
+      "exposure": "codemode"
+    },
     "superlogical": {
       "url": "https://www.superlogical.com/rex/community-mcp",
       "exposure": "codemode",
