@@ -7,7 +7,10 @@ let
   nixRepoDeployKeyPath = "/home/${user}/.ssh/nix-d-deploy-key";
 in
 {
-  imports = [ ./hardware-configuration.nix ];
+  imports = [
+    ./hardware-configuration.nix
+    inputs.rex.nixosModules.default
+  ];
 
   nix = {
     package = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system}.nixVersions.latest;
@@ -52,11 +55,16 @@ in
     nixfmt-rfc-style
     oscclip
     ripgrep
-    tailscale
     tmux
   ];
 
   services = {
+    rex.loginServer = {
+      enable = true;
+      accountsFile = "${secretsDir}/rex-accounts.jsonc";
+      tailscaleServe.enable = true;
+    };
+
     journald.extraConfig = ''
       SystemMaxUse=200M
       RuntimeMaxUse=50M
@@ -85,7 +93,10 @@ in
       };
     };
 
-    tailscale.enable = true;
+    tailscale = {
+      enable = true;
+      package = inputs.nixpkgs-unstable.legacyPackages.${pkgs.system}.tailscale;
+    };
   };
 
   programs.ssh = {

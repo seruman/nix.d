@@ -21,6 +21,8 @@
     opnix.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
+
+    rex.url = "https://pkgs.superlogical.com/rex/nix/snapshot.tar.gz";
   };
 
   outputs =
