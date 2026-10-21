@@ -75,7 +75,7 @@ in
 
     localPackages.bttf
     pkgsUnstable.biome
-    pkgsUnstable.bun
+    localPackages.bun
     pkgsGo.go_1_26
     pkgsUnstable.lua
     pkgsUnstable.luarocks

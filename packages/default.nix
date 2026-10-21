@@ -9,6 +9,9 @@ rec {
     inherit (pkgsUnstable) agent-browser;
   };
   bttf = pkgs.callPackage ./bttf.nix { };
+  bun = pkgs.callPackage ./bun.nix {
+    inherit (pkgsUnstable) bun;
+  };
   claude-code = pkgs.callPackage ./claude-code.nix {
     inherit (pkgsUnstable) claude-code;
   };
@@ -25,8 +28,8 @@ rec {
   gridcraft = pkgs.callPackage ./gridcraft.nix { };
   ollama = pkgs.callPackage ./ollama.nix { };
   pi = pkgs.callPackage ./pi.nix {
+    inherit bun;
     inherit (pkgsUnstable)
-      bun
       fd
       git
       openssh

@@ -11,6 +11,7 @@
   runCommand,
   stdenv,
   stdenvNoCC,
+  caBundle ? "/etc/ssl/certs/ca-certificates.crt",
 }:
 
 let
@@ -80,7 +81,9 @@ stdenvNoCC.mkDerivation (finalAttrs: {
         };
       }
       ''
+        # https://emudhra.we-have-a-problem.com/
         makeWrapper ${packageDir}/pi "$out/bin/${name}" \
+          --set SSL_CERT_FILE ${lib.escapeShellArg caBundle} \
           --set PI_PACKAGE_DIR "${packageDir}" \
           --set-default PI_SKIP_VERSION_CHECK 1 \
           --set-default PI_TELEMETRY 0 \
@@ -104,7 +107,9 @@ stdenvNoCC.mkDerivation (finalAttrs: {
     mkdir -p "$out/lib" "$out/bin"
     cp -R pi "$out/lib/pi"
     chmod +x "$out/lib/pi/pi"
+    # https://emudhra.we-have-a-problem.com/
     makeWrapper "$out/lib/pi/pi" "$out/bin/pi" \
+      --set SSL_CERT_FILE ${lib.escapeShellArg caBundle} \
       --set PI_PACKAGE_DIR "$out/lib/pi" \
       --set-default PI_SKIP_VERSION_CHECK 1 \
       --set-default PI_TELEMETRY 0 \
