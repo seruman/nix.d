@@ -6,6 +6,7 @@
   serumanDarwin,
   turkishKeyboardLayout,
   pkgsUnstable,
+  pkgsGo,
   ...
 }:
 
@@ -75,7 +76,7 @@ in
     localPackages.bttf
     pkgsUnstable.biome
     pkgsUnstable.bun
-    pkgsUnstable.go
+    pkgsGo.go_1_26
     pkgsUnstable.lua
     pkgsUnstable.luarocks
     pkgsUnstable.neovim
@@ -347,6 +348,8 @@ in
 
   xdg.configFile = {
     "uv/uv.toml".text = ''
+      # https://emudhra.we-have-a-problem.com/
+      system-certs = true
       # Only install package versions published at least 7 days ago.
       exclude-newer = "7 days"
     '';

@@ -134,6 +134,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-go": {
+      "locked": {
+        "lastModified": 1792572203,
+        "narHash": "sha256-Hx/tUbKnS+M/vzca3EF8vVjUg076kRKlsQzhjCbovo0=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "a551dbe1baa623df6cad54ff46309d69db39ad68",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "master",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs-nixos": {
       "locked": {
         "lastModified": 1767313136,
@@ -194,6 +210,7 @@
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs",
+        "nixpkgs-go": "nixpkgs-go",
         "nixpkgs-nixos": "nixpkgs-nixos",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "opnix": "opnix"

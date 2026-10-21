@@ -4,6 +4,7 @@
   pkgs,
   inputs,
   pkgsUnstable,
+  pkgsGo,
   ...
 }:
 
@@ -90,6 +91,9 @@ in
     };
 
     environment.variables = xdgEnvironment // {
+      # Use the filtered bundle for curl/Requests: https://emudhra.we-have-a-problem.com/
+      CURL_CA_BUNDLE = "/etc/ssl/certs/ca-certificates.crt";
+      REQUESTS_CA_BUNDLE = "/etc/ssl/certs/ca-certificates.crt";
       FORGIT_NO_ALIASES = "1";
       HOMEBREW_NO_ANALYTICS = "1";
       HOMEBREW_NO_ANALYTICS_MESSAGE_OUTPUT = "1";
@@ -118,6 +122,12 @@ in
     # Seed the user launchd environment so GUI-launched apps/terminals
     # inherit the same XDG base dirs before any shell startup files run.
     launchd.user.envVariables = xdgEnvironment;
+
+    # https://emudhra.we-have-a-problem.com/
+    security.pki.caCertificateBlacklist = [
+      "Comodo AAA Services root"
+      "emSign ECC Root CA - G3"
+    ];
 
     security.pam.services.sudo_local = {
       touchIdAuth = true;
@@ -184,6 +194,7 @@ in
         inherit
           inputs
           pkgsUnstable
+          pkgsGo
           turkishKeyboardLayout
           localPackages
           ;
