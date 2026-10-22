@@ -4,7 +4,7 @@
   "defaultModel": "gpt-6-astra",
   "defaultThinkingLevel": "high",
   "defaultTools": ["+codemode"],
-  "packages": ["git:github.com/seruman/pi-things", "npm:@plannotator/pi-extension"],
+  "packages": ["~/src/github.com/seruman/pi-things", "npm:@plannotator/pi-extension"],
   "npmCommand": ["bun"],
   "hideThinkingBlock": false,
   "cacheWarming": "idle",
