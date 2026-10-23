@@ -27,15 +27,14 @@ local placements = {
 	above = { direction = "vertical", side = "before" },
 }
 
-local function restore(ctx, args)
+local function attach(ctx, args)
 	local placement = placements[args.placement]
 	if not placement and args.placement ~= "tab" then
-		error("Unknown restore placement", 0)
+		error("Unknown attach placement", 0)
 	end
 	local session, anchor = ctx.session_id, ctx.block_id
 	local placeholder, window_id
 	if args.placement == "tab" then
-		-- new_window cannot take an existing block, so use a disposable anchor.
 		local window = must(rex.session.new_window({
 			session_id = session,
 			focus = false,
@@ -63,7 +62,6 @@ local function restore(ctx, args)
 	must(true, cleanup_err)
 	must(rex.session.focus_block({ session_id = session, block_id = args.selected_block_id }))
 	if window_id then
-		-- Server focus alone does not select the tab displayed by Rex.app.
 		rex.client.queue("session.select", { session_id = session, window_id = window_id })
 	end
 	return result
@@ -75,7 +73,7 @@ return function(ctx, args)
 	end
 	local session = ctx.session_id
 	if args.selected_block_id then
-		return restore(ctx, args)
+		return attach(ctx, args)
 	end
 
 	local blocks = must(rex.session.list_blocks({ session_id = session })).blocks or {}
@@ -128,9 +126,6 @@ return function(ctx, args)
 		.. quote(ctx.block_id)
 		.. " selected_block_id={1} placement="
 
-	-- Rex preview renderer workaround: bounds render as edges but the PTY
-	-- sizes them as extents. Reserve the clipped area with cell margins;
-	-- fzf rejects percentage margins above 49% on larger windows.
 	local w, h = math.min(200 / cols, 0.9), math.min(26 / rows_count, 0.9)
 	local x, y = (1 - w) / 2, (1 - h) / 2
 	local right = math.ceil(x * cols) + 1

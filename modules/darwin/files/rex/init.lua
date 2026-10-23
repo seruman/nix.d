@@ -12,9 +12,13 @@ rex.action({
 	title = "Detach Block",
 	description = "Detach the pane without stopping its process",
 	run = function(ctx)
-		if not ctx.block_id then return end
+		if not ctx.block_id then
+			return
+		end
 		local _, err = rex.session.detach_block({ block_id = ctx.block_id })
-		if err then error(err, 0) end
+		if err then
+			error(err, 0)
+		end
 	end,
 })
 rex.bind("prefix/d", "detach_block")
@@ -24,7 +28,7 @@ rex.action({
 	description = "Attach a detached block in a split or new tab",
 	keywords = "attach reattach recover split tab",
 	args = { selected_block_id = "string?", placement = "string?" },
-	run = require("restore"),
+	run = require("attach_block"),
 })
 rex.action({
 	name = "project_tab",
@@ -32,6 +36,22 @@ rex.action({
 	description = "Open a fresh shell tab in a repository’s session",
 	args = { cwd = "string", label = "string" },
 	run = require("project"),
+})
+rex.action({
+	name = "save_workspace",
+	title = "Save Workspace",
+	description = "Save this server’s sessions, tabs, layouts, directories and command prefills",
+	keywords = "snapshot backup restart",
+	args = { path = "string?" },
+	run = require("workspace").save,
+})
+rex.action({
+	name = "restore_workspace",
+	title = "Restore Workspace",
+	description = "Recreate the saved workspace with fresh shells; commands are typed, never run",
+	keywords = "snapshot recover restart",
+	args = { path = "string?", dry_run = "boolean?" },
+	run = require("workspace").restore,
 })
 rex.bind("prefix/z", "pane.zoom")
 rex.bind("prefix/h", "pane.focus", { direction = "left" })
