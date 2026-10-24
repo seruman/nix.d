@@ -7,7 +7,7 @@ local function call(method, args)
 	return must(rex.call(method, args))
 end
 
-local function safe_input(text)
+local function parse_prefill(text)
 	if type(text) == "string" and text ~= "" and not text:find("%c") then
 		return text
 	end
@@ -27,7 +27,7 @@ local function quote_word(value)
 	return "'" .. value:gsub("'", "'\\''") .. "'"
 end
 
-local function command(process)
+local function parse_command(process)
 	local fg = process.foreground
 	if not fg then
 		return nil
@@ -45,13 +45,13 @@ local function command(process)
 	if shells[name] and not nested then
 		return nil
 	end
-	local executable = safe_input(fg.invoked_path or fg.path or fg.argv0 or fg.name)
+	local executable = parse_prefill(fg.invoked_path or fg.path or fg.argv0 or fg.name)
 	if not executable then
 		return nil
 	end
 	local words = { quote_word(executable) }
 	if fg.script then
-		local script = safe_input(fg.script)
+		local script = parse_prefill(fg.script)
 		if not script then
 			return nil
 		end
@@ -60,7 +60,7 @@ local function command(process)
 	return table.concat(words, " ")
 end
 
-local function directory(pwd, process)
+local function parse_directory(pwd, process)
 	local value = pwd.pwd
 	if value and value:match("^file://") then
 		value = value:match("^file://[^/]*(/.*)$")
@@ -80,17 +80,16 @@ local function directory(pwd, process)
 	return value
 end
 
-local function state(args)
+local function state(path)
 	local server = call("server.status")
 	assert(server.host_id and server.instance_id, "Rex server must have a persistent host identity")
-	local base = os.getenv("XDG_STATE_HOME") or (assert(os.getenv("HOME")) .. "/.local/state")
-	return store.open(args.path or (base .. "/rex/workspace.json")), server
-end
 
-local function check_snapshot(snapshot, server)
-	assert(type(snapshot) == "table" and snapshot.version == 1, "Unsupported workspace snapshot version")
-	assert(snapshot.host_id == server.host_id, "Workspace belongs to a different Rex host/account")
-	assert(type(snapshot.sessions) == "table", "Invalid workspace sessions")
+	if not path then
+		local base = os.getenv("XDG_STATE_HOME") or (assert(os.getenv("HOME")) .. "/.local/state")
+		path = base .. "/rex/workspace.json"
+	end
+
+	return path, server
 end
 
 local function live_sessions()
@@ -105,7 +104,7 @@ local function live_id(snapshot, session, live)
 	if live[session.id] then
 		return session.id
 	end
-	local restored = (snapshot.restored or {})[session.id]
+	local restored = snapshot.restored[session.id]
 	if restored and live[restored.session_id] then
 		return restored.session_id
 	end
@@ -113,8 +112,13 @@ end
 
 local function remembered_commands(snapshot)
 	local commands = {}
-	for _, session in ipairs(snapshot and snapshot.sessions or {}) do
-		local restored = (snapshot.restored or {})[session.id]
+
+	if not snapshot then
+		return commands
+	end
+
+	for _, session in ipairs(snapshot.sessions) do
+		local restored = snapshot.restored[session.id]
 		for id, block in pairs(session.blocks) do
 			commands[id] = block.prefill
 			if restored and restored.blocks[id] then
@@ -139,8 +143,8 @@ local function capture_session(id, server, remembered)
 		local process = terminal("process")
 		saved.blocks[block.block_id] = {
 			label = block.label,
-			cwd = directory(terminal("pwd"), process),
-			prefill = command(process) or safe_input(remembered[block.block_id]),
+			cwd = parse_directory(terminal("pwd"), process),
+			prefill = parse_command(process) or remembered[block.block_id],
 		}
 		if block.placement == "detached" then
 			table.insert(saved.detached, block.block_id)
@@ -166,7 +170,7 @@ local function capture_session(id, server, remembered)
 	return saved
 end
 
-local function block_spec(block)
+local function parse_block(block)
 	assert(
 		type(block) == "table"
 			and type(block.cwd) == "string"
@@ -175,21 +179,25 @@ local function block_spec(block)
 		"Invalid pane directory"
 	)
 	assert(block.label == nil or type(block.label) == "string", "Invalid pane label")
+	block.prefill = parse_prefill(block.prefill)
+
 	return {
 		flavor = SHELL,
 		label = block.label,
-		options = { cwd = block.cwd, initial_input = safe_input(block.prefill) },
+		options = { cwd = block.cwd, initial_input = block.prefill },
 	}
 end
 
-local function layout_spec(node, blocks, ids, seen, depth)
+local function parse_layout(node, blocks, ids, seen, depth)
 	assert(type(node) == "table" and depth < 100, "Invalid or excessively deep layout")
 	if node.block_id and not node.split then
 		local id = node.block_id
+		assert(blocks[id], "Layout refers to an unknown pane")
 		assert(not seen[id], "Pane occurs twice in snapshot")
 		seen[id] = true
 		table.insert(ids, id)
-		return { block = block_spec(blocks[id]) }
+
+		return { block = blocks[id] }
 	end
 	local split = node.split
 	assert(not node.block_id and type(split) == "table", "Invalid layout node")
@@ -199,26 +207,65 @@ local function layout_spec(node, blocks, ids, seen, depth)
 		split = {
 			direction = split.direction,
 			ratio = split.ratio,
-			before = layout_spec(split.before, blocks, ids, seen, depth + 1),
-			after = layout_spec(split.after, blocks, ids, seen, depth + 1),
+			before = parse_layout(split.before, blocks, ids, seen, depth + 1),
+			after = parse_layout(split.after, blocks, ids, seen, depth + 1),
 		},
 	}
 end
 
-local function plan_session(saved)
-	assert(type(saved.id) == "string" and type(saved.label) == "string", "Invalid session identity")
-	assert(type(saved.windows) == "table" and type(saved.blocks) == "table", "Invalid session contents")
-	local plan = { initial_windows = {}, windows = {}, detached = {} }
-	local seen, windows = {}, {}
-	for _, window in ipairs(saved.windows) do
+local function parse_sequence(value, name)
+	assert(type(value) == "table", "Invalid " .. name)
+
+	local count = 0
+
+	for key in pairs(value) do
+		assert(type(key) == "number" and key >= 1 and key <= #value and key % 1 == 0, "Invalid " .. name)
+		count = count + 1
+	end
+
+	assert(count == #value, "Invalid " .. name)
+
+	return value
+end
+
+local function parse_session(saved)
+	assert(
+		type(saved) == "table" and type(saved.id) == "string" and type(saved.label) == "string",
+		"Invalid session identity"
+	)
+	assert(type(saved.blocks) == "table", "Invalid session panes")
+	local plan = {
+		id = saved.id,
+		label = saved.label,
+		active_window = saved.active_window,
+		initial_windows = {},
+		windows = {},
+		detached = {},
+	}
+	local blocks, seen, windows = {}, {}, {}
+
+	for id, block in pairs(saved.blocks) do
+		assert(type(id) == "string", "Invalid pane identity")
+		blocks[id] = parse_block(block)
+	end
+
+	if saved.detached == nil then
+		saved.detached = {}
+	end
+	parse_sequence(saved.detached, "detached panes")
+
+	for _, window in ipairs(parse_sequence(saved.windows, "session windows")) do
+		assert(type(window) == "table", "Invalid window")
 		assert(type(window.id) == "string" and not windows[window.id], "Invalid window identity")
 		assert(type(window.label) == "string" and type(window.layers) == "table", "Invalid window contents")
 		windows[window.id] = true
 		local tiled, floats = nil, {}
-		for _, layer in ipairs(window.layers) do
+		for _, layer in ipairs(parse_sequence(window.layers, "window layers")) do
+			assert(type(layer) == "table", "Invalid layer")
 			local item = { ids = {}, bounds = layer.bounds }
+
 			if layer.layout then
-				item.layout = layout_spec(layer.layout, saved.blocks, item.ids, seen, 0)
+				item.layout = parse_layout(layer.layout, blocks, item.ids, seen, 0)
 			end
 			if layer.kind == "tiled" then
 				assert(not tiled, "Multiple tiled layers")
@@ -245,23 +292,69 @@ local function plan_session(saved)
 		)
 		table.insert(plan.windows, { saved = window, tiled = tiled, floats = floats, placeholder = placeholder })
 	end
-	for _, id in ipairs(saved.detached or {}) do
+	for _, id in ipairs(saved.detached) do
+		assert(blocks[id], "Unknown detached pane")
 		assert(not seen[id], "Pane occurs twice in snapshot")
 		seen[id] = true
-		table.insert(plan.detached, { id = id, spec = block_spec(saved.blocks[id]) })
+		table.insert(plan.detached, { id = id, spec = blocks[id] })
 	end
 	for id in pairs(saved.blocks) do
 		assert(seen[id], "Pane is missing from snapshot layout")
 	end
+
+	if #plan.initial_windows == 0 then
+		plan.initial_windows = nil
+	end
+
 	return plan
 end
 
+local function parse_identities(mapping)
+	assert(type(mapping) == "table", "Invalid restored identities")
+
+	for before, after in pairs(mapping) do
+		assert(type(before) == "string" and type(after) == "string", "Invalid restored identity")
+	end
+end
+
+local function parse_snapshot(snapshot, server)
+	assert(type(snapshot) == "table" and snapshot.version == 1, "Unsupported workspace snapshot version")
+	assert(snapshot.host_id == server.host_id, "Workspace belongs to a different Rex host/account")
+	assert(type(snapshot.instance_id) == "string", "Invalid server instance")
+	if snapshot.restored == nil then
+		snapshot.restored = {}
+	end
+	assert(type(snapshot.restored) == "table", "Invalid restore mappings")
+	local plans, identities = {}, {}
+
+	for _, saved in ipairs(parse_sequence(snapshot.sessions, "workspace sessions")) do
+		local plan = parse_session(saved)
+		assert(not identities[plan.id], "Duplicate session identity")
+		identities[plan.id] = true
+		table.insert(plans, plan)
+	end
+
+	for id, mapping in pairs(snapshot.restored) do
+		assert(
+			identities[id] and type(mapping) == "table" and type(mapping.session_id) == "string",
+			"Invalid restored session"
+		)
+
+		parse_identities(mapping.blocks)
+		parse_identities(mapping.windows)
+	end
+
+	return plans
+end
+
 function M.save(ctx, args)
-	local file, server = state(args or {})
-	return file:locked(function()
+	local path, server = state(args.path)
+
+	return store.with_lock(path, function(file)
 		local previous = file:read()
-		if previous then
-			check_snapshot(previous, server)
+
+		if previous ~= nil then
+			parse_snapshot(previous, server)
 		end
 		local sessions, live = live_sessions()
 		if #sessions == 0 then
@@ -290,7 +383,6 @@ function M.save(ctx, args)
 		local remembered = remembered_commands(previous)
 		for _, session in ipairs(sessions) do
 			local saved = capture_session(session.session_id, server, remembered)
-			plan_session(saved)
 			table.insert(snapshot.sessions, saved)
 		end
 		local _, final = live_sessions()
@@ -300,7 +392,9 @@ function M.save(ctx, args)
 		for id in pairs(final) do
 			assert(live[id], "Sessions changed while saving; try again")
 		end
+		parse_snapshot(snapshot, server)
 		file:write(snapshot)
+
 		return { saved = #snapshot.sessions, message = "Workspace saved" }
 	end)
 end
@@ -344,68 +438,80 @@ local function populate(created, plan)
 		end
 	end
 	for _, block in ipairs(plan.detached) do
-		block.spec.session_id = sid
-		mapping.blocks[block.id] = call("session.new_block", block.spec).block_id
+		mapping.blocks[block.id] = call("session.new_block", {
+			session_id = sid,
+			flavor = block.spec.flavor,
+			label = block.spec.label,
+			options = block.spec.options,
+		}).block_id
 	end
 	return mapping
 end
 
-function M.restore(ctx, args)
-	args = args or {}
-	local file, server = state(args)
-	return file:locked(function()
-		local snapshot = assert(file:read(), "No workspace snapshot; use Save Workspace first")
-		check_snapshot(snapshot, server)
-		local _, live = live_sessions()
-		local plans, identities = {}, {}
-		for i, saved in ipairs(snapshot.sessions) do
-			assert(not identities[saved.id], "Duplicate session identity")
-			identities[saved.id] = true
-			plans[i] = plan_session(saved)
+local function restore_session(file, snapshot, plan)
+	local created
+	local previous = snapshot.restored[plan.id]
+	local ok, result = pcall(function()
+		created = call("session.create", {
+			label = plan.label,
+			initial_windows = plan.initial_windows,
+		})
+		local mapping = populate(created, plan)
+		local window = mapping.windows[plan.active_window]
+
+		if window then
+			call("session.focus_window", { session_id = created.session_id, window_id = window })
 		end
-		snapshot.restored = snapshot.restored or {}
+
+		snapshot.restored[plan.id] = mapping
+		file:write(snapshot)
+
+		return mapping
+	end)
+
+	if ok then
+		return result
+	end
+
+	snapshot.restored[plan.id] = previous
+
+	if created then
+		local _, cleanup = rex.call("session.destroy", { session_id = created.session_id })
+
+		if cleanup then
+			result = tostring(result) .. "; could not remove partial session " .. created.session_id .. ": " .. cleanup
+		end
+	end
+
+	return nil, result
+end
+
+function M.restore(ctx, args)
+	local path, server = state(args.path)
+
+	return store.with_lock(path, function(file)
+		local snapshot = assert(file:read(), "No workspace snapshot; use Save Workspace first")
+		local plans = parse_snapshot(snapshot, server)
+		local _, live = live_sessions()
 		local report = { created = 0, skipped = 0, would_create = 0, errors = {} }
 		local selected
-		for i, saved in ipairs(snapshot.sessions) do
-			local existing = live_id(snapshot, saved, live)
+		for _, plan in ipairs(plans) do
+			local existing = live_id(snapshot, plan, live)
 			if existing then
 				report.skipped = report.skipped + 1
 			elseif args.dry_run then
 				report.would_create = report.would_create + 1
 			else
-				local created
-				local old_mapping = snapshot.restored[saved.id]
-				local ok, err = pcall(function()
-					created = call("session.create", {
-						label = saved.label,
-						initial_windows = #plans[i].windows > 0 and plans[i].initial_windows or nil,
-					})
-					local mapping = populate(created, plans[i])
-					local window = mapping.windows[saved.active_window]
-					if window then
-						call("session.focus_window", { session_id = created.session_id, window_id = window })
-					end
-					snapshot.restored[saved.id] = mapping
-					file:write(snapshot)
-					if saved.id == snapshot.selected_session then
-						selected = { session_id = created.session_id, window_id = window }
-					end
-				end)
-				if ok then
+				local mapping, err = restore_session(file, snapshot, plan)
+
+				if mapping then
 					report.created = report.created + 1
-				else
-					snapshot.restored[saved.id] = old_mapping
-					if created then
-						local _, cleanup = rex.call("session.destroy", { session_id = created.session_id })
-						if cleanup then
-							err = tostring(err)
-								.. "; could not remove partial session "
-								.. created.session_id
-								.. ": "
-								.. cleanup
-						end
+
+					if plan.id == snapshot.selected_session then
+						selected = { session_id = mapping.session_id, window_id = mapping.windows[plan.active_window] }
 					end
-					table.insert(report.errors, saved.label .. ": " .. tostring(err))
+				else
+					table.insert(report.errors, plan.label .. ": " .. tostring(err))
 				end
 			end
 		end

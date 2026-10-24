@@ -1,19 +1,15 @@
 local store = {}
-local unpack = unpack or table.unpack
-
-local function pack(...)
-	return { n = select("#", ...), ... }
-end
-
 local function command(argv)
-	local result, err = rex.exec(argv, { timeout = 5 })
-	if not result or not result.ok then
-		error(argv[1] .. " failed: " .. tostring(result and result.stderr or err or "rex.exec returned no result"), 0)
+	local result = assert(rex.exec(argv, { timeout = 5 }))
+
+	if not result.ok then
+		error(argv[1] .. " failed: " .. result.stderr, 0)
 	end
+
 	return result.stdout
 end
 
-function store.open(path)
+function store.with_lock(path, operation)
 	assert(
 		type(path) == "string" and path:sub(1, 1) == "/" and not path:find("%z"),
 		"workspace store path must be an absolute string without NUL bytes"
@@ -23,20 +19,13 @@ function store.open(path)
 	if parent == "" then
 		parent = "/"
 	end
-	local handle, held = {}, false
+	local handle = {}
 	local lock = path .. ".lock"
-	local function require_lock()
-		assert(held, "workspace store read/write requires locked(fn)")
-	end
 
 	function handle:read()
-		require_lock()
 		local file, err = io.open(path, "rb")
 		if not file then
-			local missing, test_err = rex.exec({ "test", "!", "-e", path, "-a", "!", "-L", path }, { timeout = 5 })
-			if not missing then
-				error("cannot check " .. path .. ": " .. tostring(test_err or "rex.exec returned no result"), 0)
-			end
+			local missing = assert(rex.exec({ "test", "!", "-e", path, "-a", "!", "-L", path }, { timeout = 5 }))
 			if missing.ok then
 				return nil
 			end
@@ -46,17 +35,14 @@ function store.open(path)
 		local closed, close_err = file:close()
 		assert(text, "cannot read " .. path .. ": " .. tostring(read_err))
 		assert(closed, "cannot close " .. path .. ": " .. tostring(close_err))
-		local ok, value, decode_err = pcall(rex.json.decode, text)
-		if not ok or decode_err ~= nil then
-			error("invalid JSON in " .. path .. ": " .. tostring(ok and decode_err or value), 0)
-		end
+		local value, decode_err = rex.json.decode(text)
+		assert(value ~= nil, "invalid workspace JSON in " .. path .. ": " .. (decode_err or "null snapshot"))
+
 		return value
 	end
 
 	function handle:write(value)
-		require_lock()
-		local text, encode_err = rex.json.encode(value, { indent = true })
-		assert(type(text) == "string", "cannot encode workspace: " .. tostring(encode_err))
+		local text = assert(rex.json.encode(value, { indent = true }))
 		local temp = command({ "mktemp", parent .. "/.workspace-XXXXXX" }):gsub("\n$", "")
 		local file
 		local ok, err = pcall(function()
@@ -85,44 +71,38 @@ function store.open(path)
 		end
 	end
 
-	function handle:locked(fn)
-		assert(not held, "workspace store lock is non-reentrant: " .. lock)
-		command({ "mkdir", "-p", "-m", "700", parent })
-		local acquired, acquire_err = pcall(command, { "mkdir", "-m", "700", lock })
-		if not acquired then
-			error(
-				"cannot acquire workspace lock "
-					.. lock
-					.. ": "
-					.. tostring(acquire_err)
-					.. "; if it already exists, wait for the other operation. Remove it manually only after"
-					.. " confirming no writer is running; stale locks are never removed automatically.",
-				0
-			)
-		end
-		held = true
-		local result = pack(pcall(fn, handle))
-		held = false
-		local released, release_err = pcall(command, { "rmdir", lock })
-		if not released then
-			local prefix = result[1] and "" or (tostring(result[2]) .. "; ")
-			error(
-				prefix
-					.. "cannot release workspace lock "
-					.. lock
-					.. ": "
-					.. tostring(release_err)
-					.. "; inspect it and remove manually only when no writer is running",
-				0
-			)
-		end
-		if not result[1] then
-			error(result[2], 0)
-		end
-		return unpack(result, 2, result.n)
+	command({ "mkdir", "-p", "-m", "700", parent })
+	local acquired, acquire_err = pcall(command, { "mkdir", "-m", "700", lock })
+
+	if not acquired then
+		error(
+			"Cannot acquire "
+				.. lock
+				.. ": "
+				.. tostring(acquire_err)
+				.. "; remove a stale lock only after confirming no save/restore is running",
+			0
+		)
 	end
 
-	return handle
+	local ok, result = pcall(operation, handle)
+	local released, release_err = pcall(command, { "rmdir", lock })
+
+	if not released then
+		local message = "Cannot release " .. lock .. ": " .. tostring(release_err)
+
+		if not ok then
+			message = tostring(result) .. "; " .. message
+		end
+
+		error(message, 0)
+	end
+
+	if not ok then
+		error(result, 0)
+	end
+
+	return result
 end
 
 return store
