@@ -1,18 +1,24 @@
 {
   claude-code,
   fetchurl,
+  lib,
   stdenv,
 }:
 
 claude-code.overrideAttrs (
   finalAttrs: oldAttrs: {
-    version = "2.1.267";
+    version = "2.1.310";
     src =
       assert stdenv.hostPlatform.system == "aarch64-darwin";
       fetchurl {
         url = "https://downloads.claude.ai/claude-code-releases/${finalAttrs.version}/darwin-arm64/claude";
-        sha256 = "a681f3008f0050029aeebcab3af51bb6a55ddeb625a3af3141a4416d43cd2558";
+        sha256 = "ffb64331bc0ee1b69efb7c2c428bd3ab516bc31b75bf60886b356c97c1c25ffd";
       };
+
+    installPhase =
+      assert lib.hasInfix "unzstd -q $src -o $out/bin/claude" oldAttrs.installPhase;
+      lib.replaceString "unzstd -q $src -o $out/bin/claude" "cp $src $out/bin/claude"
+        oldAttrs.installPhase;
 
     postInstall = (oldAttrs.postInstall or "") + ''
       wrapProgram "$out/bin/claude" \

@@ -41,6 +41,8 @@ in
 
   home-manager.users.${username}.programs.teteye.enable = true;
 
+  environment.etc."resolver/ts.net".enable = false;
+
   services.tailscale = {
     enable = true;
     package = pkgsUnstable.tailscale;
