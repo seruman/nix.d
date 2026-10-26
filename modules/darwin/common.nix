@@ -4,7 +4,6 @@
   pkgs,
   inputs,
   pkgsUnstable,
-  pkgsGo,
   ...
 }:
 
@@ -196,7 +195,6 @@ in
         inherit
           inputs
           pkgsUnstable
-          pkgsGo
           turkishKeyboardLayout
           localPackages
           ;

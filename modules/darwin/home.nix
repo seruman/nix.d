@@ -6,7 +6,6 @@
   serumanDarwin,
   turkishKeyboardLayout,
   pkgsUnstable,
-  pkgsGo,
   ...
 }:
 
@@ -76,7 +75,7 @@ in
     localPackages.bttf
     pkgsUnstable.biome
     localPackages.bun
-    pkgsGo.go_1_26
+    pkgsUnstable.go_1_26
     pkgsUnstable.lua
     pkgsUnstable.luarocks
     pkgsUnstable.neovim
@@ -108,8 +107,7 @@ in
     pkgsUnstable.ffmpeg
     pkgsUnstable.gh
     pkgsUnstable.ghq
-    localPackages.agent-browser
-    localPackages.terminal-browser
+    pkgsUnstable.agent-browser
     pkgsUnstable.cloudflared
     localPackages.cloudflare-cf
     localPackages.git-hunks

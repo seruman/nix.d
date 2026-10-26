@@ -5,9 +5,6 @@
 }:
 
 rec {
-  agent-browser = pkgs.callPackage ./agent-browser.nix {
-    inherit (pkgsUnstable) agent-browser;
-  };
   bttf = pkgs.callPackage ./bttf.nix { };
   bun = pkgs.callPackage ./bun.nix {
     inherit (pkgsUnstable) bun;
@@ -38,9 +35,6 @@ rec {
   };
   rex-terminfo = pkgs.callPackage ./rex-terminfo { };
   sleeve = pkgs.callPackage ./sleeve.nix { };
-  terminal-browser = pkgs.callPackage ./terminal-browser.nix {
-    inherit agent-browser;
-  };
   teteye = pkgs.callPackage ./teteye.nix { };
   unfolder = pkgs.callPackage ./unfolder.nix { };
   wb = pkgs.callPackage ./wb.nix { };

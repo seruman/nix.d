@@ -5,7 +5,6 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-26.05-darwin";
     nixpkgs-nixos.url = "github:NixOS/nixpkgs/nixos-25.05";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    nixpkgs-go.url = "github:NixOS/nixpkgs/master";
 
     nix-darwin.url = "github:nix-darwin/nix-darwin/nix-darwin-26.05";
     nix-darwin.inputs.nixpkgs.follows = "nixpkgs";
@@ -45,10 +44,6 @@
         system = darwinSystem;
         config.allowUnfree = true;
       };
-      darwinPkgsGo = import inputs.nixpkgs-go {
-        system = darwinSystem;
-        config.allowUnfree = true;
-      };
     in
     {
       darwinModules.common = ./modules/darwin/common.nix;
@@ -60,7 +55,6 @@
         specialArgs = {
           inherit inputs;
           pkgsUnstable = darwinPkgsUnstable;
-          pkgsGo = darwinPkgsGo;
         };
         modules = [
           ./modules/darwin/common.nix
