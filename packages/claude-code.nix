@@ -23,7 +23,8 @@ claude-code.overrideAttrs (
     postInstall = (oldAttrs.postInstall or "") + ''
       wrapProgram "$out/bin/claude" \
         --set DISABLE_TELEMETRY 1 \
-        --set DISABLE_ERROR_REPORTING 1
+        --set DISABLE_ERROR_REPORTING 1 \
+        --set-default NODE_EXTRA_CA_CERTS /etc/ssl/certs/ca-certificates.crt
     '';
   }
 )
