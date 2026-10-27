@@ -1,5 +1,6 @@
 {
   "theme": "light",
+  "tuiMode": "regular",
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-6-astra",
   "defaultThinkingLevel": "high",
