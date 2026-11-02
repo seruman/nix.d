@@ -126,10 +126,8 @@ return function(ctx, args)
 		.. quote(ctx.block_id)
 		.. " selected_block_id={1} placement="
 
-	local w, h = math.min(200 / cols, 0.9), math.min(26 / rows_count, 0.9)
+	local w, h = math.min(140 / cols, 0.9), math.min(26 / rows_count, 0.9)
 	local x, y = (1 - w) / 2, (1 - h) / 2
-	local right = math.ceil(x * cols) + 1
-	local bottom = math.ceil(y * rows_count) + 1
 	local command = {
 		"/usr/bin/env",
 		"FZF_DEFAULT_COMMAND=printf '%s\\n' " .. table.concat(rows, " "),
@@ -137,10 +135,7 @@ return function(ctx, args)
 		"FZF_DEFAULT_OPTS_FILE=/dev/null",
 		"fzf",
 		"--layout=reverse",
-		string.format("--margin=0,%d,%d,0", right, bottom),
-		"--border=rounded",
-		"--border-label= Attach Block ",
-		"--color=bg:#ece9e4,bg+:#dce7eb,fg:#6b5c4d,fg+:#6b5c4d,header:#443a31:bold",
+		"--border=none",
 		"--delimiter=\t",
 		"--with-nth=2..",
 		"--prompt=Attach > ",
@@ -160,14 +155,14 @@ return function(ctx, args)
 	return must(rex.session.new_layer({
 		session_id = session,
 		window_id = window_id,
-		bounds = { x = x, y = y, w = x + w, h = y + h },
+		-- Native layer bounds are position + size, not right/bottom edges.
+		bounds = { x, y, w, h },
 		focus = true,
 		layout = rex.layout.block({
 			flavor = "com.superlogical.terminal.shell",
+			label = "Attach Block",
 			options = {
-				size = { columns = math.ceil(cols * (x + w)), rows = math.ceil(rows_count * (y + h)) },
 				command = command,
-				theme = { background = "#ece9e4", foreground = "#6b5c4d" },
 				exit = { on_completion = true, quick_exit_threshold_ms = 0 },
 			},
 		}),
