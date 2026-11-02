@@ -38,6 +38,14 @@ rex.action({
 	run = require("project"),
 })
 rex.action({
+	name = "project_picker",
+	title = "Open Repository",
+	description = "Pick a ghq repository and open a fresh tab in its project session",
+	keywords = "ghq ghqf repository project",
+	run = require("project_picker"),
+})
+rex.bind("prefix/g", "project_picker")
+rex.action({
 	name = "save_workspace",
 	title = "Save Workspace",
 	description = "Save this server’s sessions, tabs, layouts, directories and command prefills",
