@@ -45,22 +45,6 @@ rex.action({
 	run = require("project_picker"),
 })
 rex.bind("prefix/g", "project_picker")
-rex.action({
-	name = "save_workspace",
-	title = "Save Workspace",
-	description = "Save this server’s sessions, tabs, layouts, directories and command prefills",
-	keywords = "snapshot backup restart",
-	args = { path = "string?" },
-	run = require("workspace").save,
-})
-rex.action({
-	name = "restore_workspace",
-	title = "Restore Workspace",
-	description = "Recreate the saved workspace with fresh shells; commands are typed, never run",
-	keywords = "snapshot recover restart",
-	args = { path = "string?", dry_run = "boolean?" },
-	run = require("workspace").restore,
-})
 rex.bind("prefix/z", "pane.zoom")
 rex.bind("prefix/h", "pane.focus", { direction = "left" })
 rex.bind("prefix/j", "pane.focus", { direction = "down" })
