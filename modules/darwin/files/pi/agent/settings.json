@@ -4,9 +4,17 @@
   "defaultProvider": "openai-codex",
   "defaultModel": "gpt-6-astra",
   "defaultThinkingLevel": "high",
-  "defaultTools": ["+codemode"],
-  "packages": ["~/src/github.com/seruman/pi-things", "npm:@plannotator/pi-extension"],
-  "npmCommand": ["bun"],
+  "defaultTools": [
+    "+codemode"
+  ],
+  "packages": [
+    "~/src/github.com/seruman/pi-things",
+    "npm:@plannotator/pi-extension",
+    "https://github.com/earendil-works/pi-claude-code"
+  ],
+  "npmCommand": [
+    "bun"
+  ],
   "hideThinkingBlock": false,
   "cacheWarming": "idle",
   "compaction": {
