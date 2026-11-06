@@ -30,21 +30,10 @@ rex.action({
 	args = { selected_block_id = "string?", placement = "string?" },
 	run = require("attach_block"),
 })
-rex.action({
-	name = "project_tab",
-	title = "Open Project Tab",
-	description = "Open a fresh shell tab in a repository’s session",
-	args = { cwd = "string", label = "string" },
-	run = require("project"),
-})
-rex.action({
-	name = "project_picker",
-	title = "Open Repository",
-	description = "Pick a ghq repository and open a fresh tab in its project session",
-	keywords = "ghq ghqf repository project",
-	run = require("project_picker"),
-})
-rex.bind("prefix/g", "project_picker")
+require("gpick")
+rex.bind("prefix/g>g", "gpick_repos")
+rex.bind("prefix/g>w", "gpick_worktrees")
+rex.bind("prefix/g>m", "gpick_memos")
 rex.bind("prefix/z", "pane.zoom")
 rex.bind("prefix/h", "pane.focus", { direction = "left" })
 rex.bind("prefix/j", "pane.focus", { direction = "down" })
