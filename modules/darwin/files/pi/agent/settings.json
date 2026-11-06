@@ -10,7 +10,7 @@
   "packages": [
     "~/src/github.com/seruman/pi-things",
     "npm:@plannotator/pi-extension",
-    "https://github.com/earendil-works/pi-claude-code"
+    "git:github.com/earendil-works/pi-claude-code@89572b58a2adc65fe802b43dd6de8a4e16c8b88b"
   ],
   "npmCommand": [
     "bun"
