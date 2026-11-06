@@ -65,6 +65,7 @@ in
     "${config.home.homeDirectory}/.cargo/bin"
     "${config.home.homeDirectory}/bin"
     "${config.home.homeDirectory}/sbin"
+    "${config.home.homeDirectory}/Library/Application Support/com.superlogical.rex/RexServer/Versions/Current/Rex Server.app/Contents/MacOS"
   ];
 
   home.packages = [
