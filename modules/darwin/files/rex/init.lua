@@ -22,18 +22,12 @@ rex.action({
 	end,
 })
 rex.bind("prefix/d", "detach_block")
-rex.action({
-	name = "attach_block",
-	title = "Attach Block",
-	description = "Attach a detached block in a split or new tab",
-	keywords = "attach reattach recover split tab",
-	args = { selected_block_id = "string?", placement = "string?" },
-	run = require("attach_block"),
-})
-require("gpick")
+require("menus")
 rex.bind("prefix/g>g", "gpick_repos")
 rex.bind("prefix/g>w", "gpick_worktrees")
 rex.bind("prefix/g>m", "gpick_memos")
+rex.bind("prefix/f", "bpick_floating")
+rex.bind("prefix/a", "bpick_detached")
 rex.bind("prefix/z", "pane.zoom")
 rex.bind("prefix/h", "pane.focus", { direction = "left" })
 rex.bind("prefix/j", "pane.focus", { direction = "down" })
