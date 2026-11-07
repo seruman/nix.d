@@ -8,6 +8,7 @@
 {
   environment.systemPackages = [
     localPackages.gridcraft
+    localPackages.markdown-preview
     localPackages.unfolder
   ];
 

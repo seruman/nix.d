@@ -1,4 +1,7 @@
 {
+  config,
+  lib,
+  localPackages,
   pkgs,
   pkgsUnstable,
   username,
@@ -38,6 +41,20 @@ in
     hostName = "dumpedcore";
     localHostName = "dumpedcore";
   };
+
+  system.defaults.CustomUserPreferences."${
+    config.users.users.${username}.home
+  }/Library/Containers/doc.md-preview/Data/Library/Preferences/doc.md-preview" =
+    lib.mkIf (lib.elem localPackages.markdown-preview config.environment.systemPackages) {
+      "MarkdownPreview.sendAnonymousCrashReports" = false;
+      "MarkdownPreview.shareAnonymousUsageAnalytics" = false;
+      SUEnableAutomaticChecks = false;
+      SUAutomaticallyUpdate = false;
+      SUSendProfileInfo = false;
+
+      "MarkdownPreview.whatsNewLastBuild" = localPackages.markdown-preview.buildNumber;
+      "MarkdownPreview.lastVersion" = localPackages.markdown-preview.version;
+    };
 
   home-manager.users.${username}.programs.teteye.enable = true;
 
