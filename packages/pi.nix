@@ -90,7 +90,8 @@ stdenvNoCC.mkDerivation (finalAttrs: {
           ${envArgs} \
           --prefix PATH : "${runtimeBins}"
 
-        if ! "$out/bin/${name}" --help | grep -q ${agentDirVar}; then
+        if ! HOME="$TMPDIR" ${agentDirVar}="$TMPDIR/agent" PI_CODING_AGENT_DIR="$TMPDIR/agent" \
+          "$out/bin/${name}" --help | grep -q ${agentDirVar}; then
           echo "pi ${finalAttrs.version} does not honour piConfig.name" >&2
           exit 1
         fi
