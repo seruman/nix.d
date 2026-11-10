@@ -7,12 +7,12 @@
 
 claude-code.overrideAttrs (
   finalAttrs: oldAttrs: {
-    version = "2.1.310";
+    version = "2.1.321";
     src =
       assert stdenv.hostPlatform.system == "aarch64-darwin";
       fetchurl {
         url = "https://downloads.claude.ai/claude-code-releases/${finalAttrs.version}/darwin-arm64/claude";
-        sha256 = "ffb64331bc0ee1b69efb7c2c428bd3ab516bc31b75bf60886b356c97c1c25ffd";
+        sha256 = "abc9feeeca8091d51b623291e044cf0528c2f6b74e0c1d6ef671d52c73f7cd3c";
       };
 
     installPhase =
