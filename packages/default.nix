@@ -15,6 +15,7 @@ rec {
   cloudflare-cf = pkgs.callPackage ./cloudflare-cf.nix {
     inherit (pkgsUnstable) nodejs;
   };
+  container = pkgs.callPackage ./container.nix { };
   git-hunks = pkgs.callPackage ./git-hunks.nix { };
   glide = pkgs.callPackage ./glide.nix {
     inherit (inputs) glide;

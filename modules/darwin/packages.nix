@@ -12,6 +12,7 @@
   };
 
   environment.systemPackages = [
+    localPackages.container
     localPackages.glide
     localPackages.sleeve
     localPackages.rex-terminfo
