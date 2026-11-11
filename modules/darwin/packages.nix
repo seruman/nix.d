@@ -14,6 +14,7 @@
   environment.systemPackages = [
     localPackages.container
     localPackages.glide
+    localPackages.mocker
     localPackages.sleeve
     localPackages.rex-terminfo
   ];

@@ -25,6 +25,7 @@ rec {
   };
   gridcraft = pkgs.callPackage ./gridcraft.nix { };
   markdown-preview = pkgs.callPackage ./markdown-preview.nix { };
+  mocker = pkgs.callPackage ./mocker.nix { };
   ollama = pkgs.callPackage ./ollama.nix { };
   pi = pkgs.callPackage ./pi.nix {
     inherit bun;
