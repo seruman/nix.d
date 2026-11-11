@@ -13,7 +13,6 @@
       "maccy"
       "mimestream"
       "monodraw"
-      "mullvad-vpn"
       "orbstack"
       "rectangle"
       "steermouse"
