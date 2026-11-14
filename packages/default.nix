@@ -38,6 +38,7 @@ rec {
   };
   rex-terminfo = pkgs.callPackage ./rex-terminfo { };
   sleeve = pkgs.callPackage ./sleeve.nix { };
+  smolvm = pkgs.callPackage ./smolvm.nix { };
   teteye = pkgs.callPackage ./teteye.nix { };
   unfolder = pkgs.callPackage ./unfolder.nix { };
   wb = pkgs.callPackage ./wb.nix { };

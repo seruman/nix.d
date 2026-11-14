@@ -140,6 +140,7 @@ in
     pkgsUnstable.watch
     pkgsUnstable.yq
 
+    localPackages.smolvm
     pkgsUnstable.docker-client
     pkgsUnstable.docker-buildx
     pkgsUnstable.docker-compose
