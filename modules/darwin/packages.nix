@@ -14,6 +14,7 @@
   environment.systemPackages = [
     localPackages.container
     localPackages.glide
+    localPackages.maccy
     localPackages.mocker
     localPackages.sleeve
     localPackages.rex-terminfo

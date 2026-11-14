@@ -24,6 +24,7 @@ rec {
     inherit (pkgsUnstable) nodejs;
   };
   gridcraft = pkgs.callPackage ./gridcraft.nix { };
+  maccy = pkgs.callPackage ./maccy.nix { };
   markdown-preview = pkgs.callPackage ./markdown-preview.nix { };
   mocker = pkgs.callPackage ./mocker.nix { };
   ollama = pkgs.callPackage ./ollama.nix { };

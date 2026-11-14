@@ -10,7 +10,6 @@
       "chatgpt"
       "ghostty@tip"
       "helium-browser"
-      "maccy"
       "mimestream"
       "monodraw"
       "orbstack"
