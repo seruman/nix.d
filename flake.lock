@@ -79,6 +79,27 @@
         "type": "github"
       }
     },
+    "mbx": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794255730,
+        "narHash": "sha256-Smz5HWY8LWuwsE6dyJ1bjURF8kDmt9AevdIa0NM+awo=",
+        "owner": "jdx",
+        "repo": "mr-boxington",
+        "rev": "2299ea69519d142d85b5903cbd0e2690419b7bed",
+        "type": "github"
+      },
+      "original": {
+        "owner": "jdx",
+        "ref": "v1.30.0",
+        "repo": "mr-boxington",
+        "type": "github"
+      }
+    },
     "nix-darwin": {
       "inputs": {
         "nixpkgs": [
@@ -219,6 +240,7 @@
       "inputs": {
         "glide": "glide",
         "home-manager": "home-manager",
+        "mbx": "mbx",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
         "nixpkgs": "nixpkgs",

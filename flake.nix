@@ -21,6 +21,9 @@
 
     nix-homebrew.url = "github:zhaofengli/nix-homebrew";
 
+    mbx.url = "github:jdx/mr-boxington/v1.30.0";
+    mbx.inputs.nixpkgs.follows = "nixpkgs";
+
     rex.url = "https://pkgs.superlogical.com/rex/nix/snapshot.tar.gz";
   };
 
