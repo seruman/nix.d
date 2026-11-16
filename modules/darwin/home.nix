@@ -18,6 +18,7 @@ in
     ./home/fish.nix
     ./home/git.nix
     ./home/ghostty.nix
+    ./home/mr-boxington.nix
     ./home/ollama.nix
     ./home/rex.nix
     ./home/ssh.nix
