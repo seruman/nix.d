@@ -1,7 +1,14 @@
-{ dumpedcoreHomebrewTap, ... }:
+{
+  config,
+  dumpedcoreHomebrewTap,
+  ...
+}:
 
 {
   homebrew = {
+    # sudo strips XDG_CONFIG_HOME; retain the shell's scoped Homebrew trust store.
+    onActivation.extraEnv.XDG_CONFIG_HOME = config.environment.variables.XDG_CONFIG_HOME;
+
     taps = [
       {
         name = "seruman/dumpedcore";

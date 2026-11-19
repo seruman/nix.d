@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   dumpedcoreHomebrewTap,
   pkgs,
@@ -15,6 +16,7 @@
         --user=${lib.escapeShellArg username} \
         --set-home \
         env \
+          XDG_CONFIG_HOME=${lib.escapeShellArg config.environment.variables.XDG_CONFIG_HOME} \
           HOMEBREW_NO_AUTO_UPDATE=1 \
           HOMEBREW_NO_ENV_HINTS=1 \
           HOMEBREW_NO_ANALYTICS=1 \
