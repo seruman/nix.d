@@ -5,7 +5,7 @@ rex.bind("ctrl+b", "client.mode.enter", { name = "prefix", once = true })
 rex.mode("prefix", { exclusive = true })
 rex.bind("prefix/\\", "pane.split", { direction = "right" })
 rex.bind("prefix/-", "pane.split", { direction = "down" })
-rex.bind("prefix/o", "session.switch")
+rex.bind("prefix/o", "pane.focus_back")
 rex.bind("prefix/x", "client.close")
 rex.action({
 	name = "detach_block",
