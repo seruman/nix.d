@@ -42,6 +42,12 @@ end
 rex.bind("prefix/shift+.", "client.tab.move", { direction = "forward" })
 rex.bind("prefix/shift+,", "client.tab.move", { direction = "backward" })
 rex.bind("prefix//", "client.find.open")
+rex.bind("prefix/[", "pane.copy_mode.enter")
+rex.bind("copy/shift+y", "pane.copy_mode.copy_to_line_end")
+rex.bind("copy/ctrl+e", "pane.copy_mode.move", { to = "down" })
+rex.bind("copy/ctrl+y", "pane.copy_mode.move", { to = "up" })
+rex.bind("copy/ctrl+c", "pane.copy_mode.exit")
+rex.bind("copy/ctrl+[", "pane.copy_mode.exit")
 rex.bind("prefix/r", "client.mode.enter", { name = "resize" })
 rex.bind("prefix/escape", "client.mode.exit_all")
 
